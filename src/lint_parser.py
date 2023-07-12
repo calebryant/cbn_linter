@@ -151,9 +151,9 @@ eval_expression = (if_statement_lval + evaluator + if_statement_rval) | (lparen 
 bool_neg = Literal('!') | Keyword("not")
 # Boolean statement
 # Ex. ![identifier]
-bool_expression = Opt(bool_neg) + (if_statement_lval | (lparen + if_statement_lval + lparen))
+bool_expression = Opt(bool_neg) + (if_statement_lval | (lparen + if_statement_lval + rparen))
 expression = eval_expression | bool_expression
-statement <<= (expression + ZeroOrMore(and_or + statement)) | Group(lparen + expression + ZeroOrMore(and_or + statement) + lparen)
+statement <<= (expression + ZeroOrMore(and_or + statement)) | Group(lparen + expression + ZeroOrMore(and_or + statement) + rparen)
 # Ex. if [if_statement_comparisons] and/or [if_statement_comparisons] { [body] }
 if_statement <<= Keyword("if") + statement + lbrace + OneOrMore(if_statement|elif_statement|else_statement|for_statement|mutate|grok|json|csv|kv|date|drop) + rbrace
 # Ex. else if [if_statement_comparisons] [and_or] [if_statement_comparisons] { [body] }
