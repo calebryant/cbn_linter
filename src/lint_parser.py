@@ -132,13 +132,13 @@ drop = Keyword("drop") + lbrace + Opt(config_option) + rbrace
 # If/if else statement grammar #
 ################################
 # values that go on the left side of the evaluator in an if or if else statement
-if_statement_lval = Combine(OneOrMore(lbracket + identifier + rbracket))
+if_statement_lval = OneOrMore(lbracket + identifier + rbracket)
 # Regex values surrounded by / /
 regex_vals = (Opt('\\') + Literal('/')) + ... + (Opt('\\') + Literal('/'))
 # Math operators
 math_operator = Literal('+') | Literal('-') | Literal('*') | Literal('/')
 # Math equation
-math_equation = if_statement_lval + math_operator + (Word(nums) | if_statement_lval)
+math_equation = if_statement_lval + math_operator + (num_val | if_statement_lval)
 # values that go on the right side of the evaluator in an if or if else statement
 if_statement_rval = quoted_string | identifier | math_equation | if_statement_lval | strict_list | regex_vals
 # valid evaluators
@@ -147,9 +147,11 @@ evaluator = Keyword('not in') | Keyword('in') | Keyword('=~') | Keyword('!~') | 
 and_or = Keyword("and") | Keyword("or") | Keyword('||') | Keyword('&&')
 # Evaluation statement, has a left and right val separated by an evaluator, can be surrounded by parentheses
 eval_expression = (if_statement_lval + evaluator + if_statement_rval) | (lparen + if_statement_lval + evaluator + if_statement_rval + lparen)
+# Boolean negate literal
+bool_neg = Literal('!') | Keyword("not")
 # Boolean statement
 # Ex. ![identifier]
-bool_expression = Opt(Literal('!') | Keyword("not")) + (if_statement_lval | (lparen + if_statement_lval + lparen))
+bool_expression = Opt(bool_neg) + (if_statement_lval | (lparen + if_statement_lval + lparen))
 expression = eval_expression | bool_expression
 statement <<= (expression + ZeroOrMore(and_or + statement)) | Group(lparen + expression + ZeroOrMore(and_or + statement) + lparen)
 # Ex. if [if_statement_comparisons] and/or [if_statement_comparisons] { [body] }
@@ -162,13 +164,17 @@ else_statement <<= Keyword("else") + lbrace + OneOrMore(if_statement|elif_statem
 #########################
 # For statement grammar #
 #########################
+# in keyword
+in_keyword = Keyword("in")
 # Ex. for index, value in [identifier] { [body] }
-for_statement <<= Keyword("for") + Opt(identifier + ',') + identifier + "in" + identifier + lbrace + OneOrMore(if_statement|elif_statement|else_statement|for_statement|mutate|grok|json|csv|kv|date|drop) + rbrace
+for_statement <<= Keyword("for") + Opt(identifier + comma) + identifier + in_keyword + identifier + lbrace + OneOrMore(if_statement|elif_statement|else_statement|for_statement|mutate|grok|json|csv|kv|date|drop) + rbrace
 
 #######################################################
 # Chronicle Logstash context-free language definition #
 #######################################################
-parser_language = "filter" + lbrace + OneOrMore(if_statement|elif_statement|else_statement|for_statement|mutate|grok|json|csv|kv|date|drop) + rbrace
+# filter keyword
+filter = Keyword("filter")
+parser_language = filter + lbrace + OneOrMore(if_statement|elif_statement|else_statement|for_statement|mutate|grok|json|csv|kv|date|drop) + rbrace
 # Ignore commented statements
 comment = Literal('#') + ... + LineEnd()
 parser_language.ignore(comment)
