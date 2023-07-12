@@ -20,19 +20,14 @@ from pyparsing import (
 ######################
 # Assignment character
 assign = Literal('=>') | Literal('=')
-assign.set_parse_action(lambda s,loc,token: AssignToken(lineno(loc,s), col(loc,s), token.as_list()[0]))
 # Variable names, not quoted
 identifier = Word(srange("[@A-Za-z0-9_.\-]"))
-identifier.set_parse_action(lambda s,loc,token: IdentifierToken(lineno(loc,s), col(loc,s), token.as_list()[0]))
 # Strings surrounded by "" or ''
 quoted_string = QuotedString('"', escChar='\\') | QuotedString("'", escChar='\\')
-quoted_string.set_parse_action(lambda s,loc,token: QuotedValToken(lineno(loc,s), col(loc,s), token.as_list()[0]))
 # true or false value
 boolean = Keyword("true") | Keyword("false")
-boolean.set_parse_action(lambda s,loc,token: BoolToken(lineno(loc,s), col(loc,s), token.as_list()[0]))
 # Numerical values
 num_val = Word(nums + '.')
-num_val.set_parse_action(lambda s,loc,token: NumToken(lineno(loc,s), col(loc,s), token.as_list()[0]))
 # Values that go on the right side of an expression, 
 # Ex. replace => { "udm_field" => "value" }, "value" is the r_value
 r_value = quoted_string | num_val | boolean
@@ -42,15 +37,11 @@ l_value = identifier | quoted_string
 # Definition of an expression, 
 # Ex. replace => { "udm_field" => "value" }, '"udm_field" => "value"' is a key_value_pair
 key_value_pair = l_value + assign + r_value + Suppress(Opt(','))
-# key_value_pair.set_parse_action(lambda s,loc,token: AssignStatementToken(lineno(loc,s), col(loc,s), token.as_list()))
 # on_error statements
 # Ex. on_error => quoted_string
 on_error_keyword = Keyword("on_error")
-on_error_keyword.set_parse_action(lambda s,loc,token: LValToken(lineno(loc,s), col(loc,s), "on_error"))
 on_error_name = QuotedString('"', escChar='\\') | QuotedString("'", escChar='\\')
-on_error_name.set_parse_action(lambda s,loc,token: QuotedValToken(lineno(loc,s), col(loc,s), token.as_list()))
 on_error = on_error_keyword + assign + on_error_name
-on_error.set_parse_action(lambda s,loc,token: OnErrorToken(lineno(loc,s), col(loc,s), token.as_list()))
 # recursive objects to be defined later on
 if_statement = Forward()
 elif_statement = Forward()
@@ -64,94 +55,73 @@ statement = Forward()
 # Overwrite statements
 # Ex. overwrite => [ list of strings ]
 overwrite_keyword = Keyword("overwrite")
-overwrite_keyword.set_parse_action(lambda s,loc,token: LValToken(lineno(loc,s), col(loc,s), "overwrite"))
 overwrite_list = Suppress('[') + ZeroOrMore(Each(quoted_string|Suppress(','))) + Suppress(']')
-overwrite_list.set_parse_action(lambda s,loc,token: ListToken(lineno(loc,s), col(loc,s), token.as_list()))
 overwrite = overwrite_keyword + assign + overwrite_list
-overwrite.set_parse_action(lambda s,loc,token: OverwriteToken(lineno(loc,s), col(loc,s), token.as_list()))
 # Grok pattern syntax definition
 # Ex. "message" => [ list of grok patterns ]
 grok_key_value_pair = quoted_string + (assign|Suppress(':')) + Suppress(Opt('[')) + OneOrMore(quoted_string + Opt(',')) + Suppress(Opt(']'))
-grok_key_value_pair.set_parse_action(lambda s,loc,token: GrokPatternToken(lineno(loc,s), col(loc,s), token.as_list()))
 # Match function definition
 # Ex. match => { grok key value pairs } overwrite on_error
 match = Suppress(Keyword("match")) + assign + Suppress('{') + OneOrMore(grok_key_value_pair) + Suppress('}') + (Opt(overwrite) & Opt(on_error))
 # Overall grok filter definition
 # Ex. grok { match statement }
 grok = Keyword("grok") + Suppress('{') + match + Suppress('}')
-grok.set_parse_action(lambda s,loc,token: GrokToken(lineno(loc,s), col(loc,s), token.as_list()))
 
 ##################################
 # Mutate plugin function grammar #
 ##################################
 # Ex. gsub => [ gsub expressions ]
 gsub_exression = quoted_string + Suppress(',') + quoted_string + Suppress(',') + quoted_string + Suppress(Opt(','))
-gsub_exression.set_parse_action(lambda s,loc,token: GsubExpressionToken(lineno(loc,s), col(loc,s), token.as_list()))
 gsub = Keyword("gsub") + assign + Suppress('[') + OneOrMore(gsub_exression) + Suppress(']')
-gsub.set_parse_action(lambda s,loc,token: GsubToken(lineno(loc,s), col(loc,s), token.as_list()))
 # Ex. lowercase => [ list of strings ]
 lowercase = Keyword("lowercase") + assign + Suppress('[') + OneOrMore(quoted_string + Suppress(Opt(','))) + Suppress(']')
-lowercase.set_parse_action(lambda s,loc,token: LowercaseToken(lineno(loc,s), col(loc,s), token.as_list()))
 # Ex. uppercase => [ list of strings ]
 uppercase = Keyword("uppercase") + assign + Suppress('[') + OneOrMore(quoted_string + Suppress(Opt(','))) + Suppress(']')
-uppercase.set_parse_action(lambda s,loc,token: UppercaseToken(lineno(loc,s), col(loc,s), token.as_list()))
 # Ex. replace => { [key_value_pair] }
 replace = Keyword("replace") + assign + Suppress('{') + OneOrMore(key_value_pair) + Suppress('}')
-replace.set_parse_action(lambda s,loc,token: ReplaceToken(lineno(loc,s), col(loc,s), token.as_list()))
 # Ex. merge => { [key_value_pair] }
 merge = Keyword("merge") + assign + Suppress('{') + OneOrMore(key_value_pair) + Suppress('}')
-merge.set_parse_action(lambda s,loc,token: MergeToken(lineno(loc,s), col(loc,s), token.as_list()))
 # Ex. rename => { [key_value_pair] }
 rename = Keyword("rename") + assign + Suppress('{') + OneOrMore(key_value_pair) + Suppress('}')
-rename.set_parse_action(lambda s,loc,token: RenameToken(lineno(loc,s), col(loc,s), token.as_list()))
 # Ex. convert => { [key_value_pair] }
 convert = Keyword("convert") + assign + Suppress('{') + OneOrMore(key_value_pair) + Suppress('}')
-convert.set_parse_action(lambda s,loc,token: ConvertToken(lineno(loc,s), col(loc,s), token.as_list()))
 functions = replace | merge | rename | convert | gsub | lowercase | uppercase
 # Ex. mutate { [functions] on_error }
 mutate = Suppress(Keyword("mutate")) + Suppress('{') + OneOrMore(functions + Opt(on_error)) + Suppress('}')
-mutate.set_parse_action(lambda s,loc,token: MutateToken(lineno(loc,s), col(loc,s), token.as_list()))
 
 ################
 # Json grammar #
 ################
 # Ex. source => "json_message"
 options = identifier + Suppress("=>") + r_value
-options.set_parse_action(lambda s,loc,token: OptionToken(lineno(loc,s), col(loc,s), token.as_list()))
 # Ex. json => { options list }
 json = Keyword("json") + Suppress('{') + OneOrMore(on_error|options) + Suppress('}')
-json.set_parse_action(lambda s,loc,token: JsonToken(lineno(loc,s), col(loc,s), token.as_list()))
 
 ###############
 # Csv grammar #
 ###############
 # Ex. csv => { options list }
 csv = Keyword("csv") + Suppress('{') + OneOrMore(on_error|options) + Suppress('}')
-csv.set_parse_action(lambda s,loc,token: CsvToken(lineno(loc,s), col(loc,s), token.as_list()))
 
 ##############
 # Kv grammar #
 ##############
 # Ex. kv => { options list }
 kv = Keyword("kv") + Suppress('{') + OneOrMore(on_error|options) + Suppress('}')
-kv.set_parse_action(lambda s,loc,token: KvToken(lineno(loc,s), col(loc,s), token.as_list()))
 
 ################
 # Date grammar #
 ################
 # Ex. match => [ list of quoted strings ]
 date_match = Keyword("match") + Suppress("=>") + Suppress('[') + OneOrMore(quoted_string + Suppress(Opt(','))) + Suppress("]")
-date_match.set_parse_action(lambda s,loc,token: DateMatchToken(lineno(loc,s), col(loc,s), token.as_list()))
 # Ex. date { match statement and options }
 date = Keyword("date") + Suppress('{') + date_match + OneOrMore(on_error|options) + Suppress('}')
-date.set_parse_action(lambda s,loc,token: DateToken(lineno(loc,s), col(loc,s), token.as_list()))
 
 ################
 # Drop grammar #
 ################
 # Ex. drop { tag => "MALFORMED" }
 drop = Keyword("drop") + Suppress('{') + Keyword("tag") + assign + quoted_string + Suppress('}')
-drop.set_parse_action(lambda s,loc,token: DropToken(lineno(loc,s), col(loc,s), token.as_list()))
 
 ################################
 # If/if else statement grammar #
@@ -196,7 +166,6 @@ for_statement <<= Keyword("for") + Opt(identifier + ',') + identifier + Suppress
 # Chronicle Logstash context-free language definition #
 #######################################################
 parser_language = Suppress("filter") + Suppress('{') + OneOrMore(if_statement|elif_statement|else_statement|for_statement|mutate|grok|json|csv|kv|date|drop) + Suppress('}')
-# parser_language.set_parse_action(lambda s,l,t: (l,t))
 # Ignore commented statements
 comment = Literal('#') + ... + LineEnd()
 parser_language.ignore(comment)
