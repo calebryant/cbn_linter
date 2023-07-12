@@ -23,20 +23,26 @@ assign = Literal('=>') | Literal('=')
 assign.set_parse_action(lambda s,loc,token: AssignToken(lineno(loc,s), col(loc,s), token.as_list()[0]))
 # Variable names, not quoted
 identifier = Word(srange("[@A-Za-z0-9_.\-]"))
+identifier.set_parse_action(lambda s,loc,token: IdentifierToken(lineno(loc,s), col(loc,s), token.as_list()[0]))
 # Strings surrounded by "" or ''
 quoted_string = QuotedString('"', escChar='\\') | QuotedString("'", escChar='\\')
+quoted_string.set_parse_action(lambda s,loc,token: QuotedValToken(lineno(loc,s), col(loc,s), token.as_list()[0]))
+# true or false value
+boolean = Keyword("true") | Keyword("false")
+boolean.set_parse_action(lambda s,loc,token: BoolToken(lineno(loc,s), col(loc,s), token.as_list()[0]))
+# Numerical values
+num_val = Word(nums + '.')
+num_val.set_parse_action(lambda s,loc,token: NumToken(lineno(loc,s), col(loc,s), token.as_list()[0]))
 # Values that go on the right side of an expression, 
 # Ex. replace => { "udm_field" => "value" }, "value" is the r_value
-r_value = quoted_string | Word(nums + '.') | "true" | "false"
-r_value.set_parse_action(lambda s,loc,token: RValToken(lineno(loc,s), col(loc,s), token.as_list()[0]))
+r_value = quoted_string | num_val | boolean
 # Values that go on the left side of an expression, 
 # Ex. replace => { "udm_field" => "value" }, "udm_field" is the l_value
 l_value = identifier | quoted_string
-l_value.set_parse_action(lambda s,loc,token: LValToken(lineno(loc,s), col(loc,s), token.as_list()[0]))
 # Definition of an expression, 
 # Ex. replace => { "udm_field" => "value" }, '"udm_field" => "value"' is a key_value_pair
 key_value_pair = l_value + assign + r_value + Suppress(Opt(','))
-key_value_pair.set_parse_action(lambda s,loc,token: AssignStatementToken(lineno(loc,s), col(loc,s), token.as_list()))
+# key_value_pair.set_parse_action(lambda s,loc,token: AssignStatementToken(lineno(loc,s), col(loc,s), token.as_list()))
 # on_error statements
 # Ex. on_error => quoted_string
 on_error_keyword = Keyword("on_error")

@@ -54,7 +54,10 @@ class Token:
 			"TARGET",
 			"FIELDSPLIT",
 			"VALUESPLIT",
-			"OPTION"
+			"OPTION",
+			"IDENTIFIER",
+			"BOOLEAN",
+			"NUMBER"
 		]
 		self.line = line
 		self.column = col
@@ -318,8 +321,8 @@ class FieldNameToken(Token):
 		super().__init__(line, col, fieldNameVal, "FIELD")
 
 class QuotedValToken(Token):
-	def __init__(self, line, col, quotedVal):
-		super().__init__(line, col, quotedVal, "QUOTEDVAL")
+	def __init__(self, line, col, token):
+		super().__init__(line, col, token, "QUOTEDVAL")
 
 class IntegerToken(Token):
 	def __init__(self, line, col, intVal):
@@ -372,4 +375,16 @@ class OptionToken(Token):
 		self.name = token_as_list[0]
 		self.value = token_as_list[1]
 		super().__init__(line, col, self.name, "OPTION")
+
+class IdentifierToken(Token):
+	def __init__(self, line, col, token):
+		super().__init__(line, col, token, "IDENTIFIER")
+
+class BoolToken(Token):
+	def __init__(self, line, col, token):
+		super().__init__(line, col, token, "BOOLEAN")
+
+class NumToken(Token):
+	def __init__(self, line, col, token):
+		super().__init__(line, col, token, "NUMBER")
 
