@@ -109,6 +109,11 @@ class ConvertToken(Token):
 		super().__init__(position, column, row)
 		self.value = "convert"
 
+class CopyToken(Token):
+	def __init__(self, position, column, row):
+		super().__init__(position, column, row)
+		self.value = "copy"
+
 class MutateToken(Token):
 	def __init__(self, position, column, row):
 		super().__init__(position, column, row)
