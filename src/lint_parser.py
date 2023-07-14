@@ -8,7 +8,7 @@ from pyparsing import (
     Opt, QuotedString, ZeroOrMore, Group,
     OneOrMore, Keyword, Literal, Forward, SkipTo,
     Dict, LineStart, LineEnd, srange, exceptions,
-    Each, lineno, col, testing
+    Each, lineno, col, line, testing
 )
 
 parser = argparse.ArgumentParser(
@@ -80,6 +80,7 @@ if_statement = Forward()
 elif_statement = Forward()
 else_statement = Forward()
 for_statement = Forward()
+if_else_chain = Forward()
 statement = Forward()
 
 ################
@@ -189,13 +190,14 @@ expression = eval_expression | bool_expression
 statement <<= (expression + ZeroOrMore(and_or + statement)) | lparen + expression + ZeroOrMore(and_or + statement) + rparen
 # Ex. if [if_statement_comparisons] and/or [if_statement_comparisons] { [body] }
 if_keyword = Keyword("if")
-if_statement <<= if_keyword + statement + lbrace + OneOrMore(if_statement|elif_statement|else_statement|for_statement|mutate|grok|json|csv|kv|date|drop) + rbrace
+if_statement <<= if_keyword + statement + lbrace + OneOrMore(if_else_chain|for_statement|mutate|grok|json|csv|kv|date|drop) + rbrace
 # Ex. else if [if_statement_comparisons] [and_or] [if_statement_comparisons] { [body] }
 elif_keyword = Keyword("else if")
-elif_statement <<= elif_keyword + statement + lbrace + OneOrMore(if_statement|elif_statement|else_statement|for_statement|mutate|grok|json|csv|kv|date|drop) + rbrace
+elif_statement <<= elif_keyword + statement + lbrace + OneOrMore(if_else_chain|for_statement|mutate|grok|json|csv|kv|date|drop) + rbrace
 # Ex. else { [body] }
 else_keyword = Keyword("else")
-else_statement <<= else_keyword + lbrace + OneOrMore(if_statement|elif_statement|else_statement|for_statement|mutate|grok|json|csv|kv|date|drop) + rbrace
+else_statement <<= else_keyword + lbrace + OneOrMore(if_else_chain|for_statement|mutate|grok|json|csv|kv|date|drop) + rbrace
+if_else_chain <<= if_statement + ZeroOrMore(elif_statement) + Opt(else_statement)
 
 #########################
 # For statement grammar #
@@ -204,7 +206,7 @@ else_statement <<= else_keyword + lbrace + OneOrMore(if_statement|elif_statement
 in_keyword = Keyword("in")
 # Ex. for index, value in [identifier] { [body] }
 for_keyword = Keyword("for")
-for_statement <<= for_keyword + Opt(identifier + comma) + identifier + in_keyword + identifier + lbrace + OneOrMore(if_statement|elif_statement|else_statement|for_statement|mutate|grok|json|csv|kv|date|drop) + rbrace
+for_statement <<= for_keyword + Opt(identifier + comma) + identifier + in_keyword + identifier + lbrace + OneOrMore(if_else_chain|for_statement|mutate|grok|json|csv|kv|date|drop) + rbrace
 
 # filter keyword
 filter_keyword = Keyword("filter")
@@ -256,107 +258,92 @@ filter_keyword.set_parse_action(lambda string,position,token: FilterToken(positi
 #######################################################
 # Chronicle Logstash context-free language definition #
 #######################################################
-parser_language = filter_keyword + lbrace + OneOrMore(if_statement|elif_statement|else_statement|for_statement|mutate|grok|json|csv|kv|date|drop) + rbrace
+parser_language = filter_keyword + lbrace + OneOrMore(if_else_chain|for_statement|mutate|grok|json|csv|kv|date|drop) + rbrace
 # Ignore commented statements
 comment = Literal('#') + ... + LineEnd()
 parser_language.ignore(comment)
 
 # Recursive function to find and print the exact position of a parser error to the terminal
 # Breaks the string down into smaller bits and attempts to re-parse
-def drilldown_parser_error(parser_error_message, verbose=True):
-    match = re.search("found '(.*)'  \(at char ([\d]+)\), \(line:([\d]+), col:([\d]+)\)", parser_error_message)
-    if verbose:
-        print(parser_error_message)
+def drilldown_parser_error(position, message):
+    match = re.search("found '(.+)'", message)
     if match:
         found = match.group(1)
-        char = int(match.group(2))
-        line = int(match.group(3))
-        col = int(match.group(4))
-        file_lines = entire_file_lines[line-1:]
-        file_content = ''.join(file_lines)
-        # print(file_content[:1000]) # uncomment to view file partitions used in recursive calls
         try:
             if found == 'else':
-                elif_match = re.search('else if', file_lines[0])
+                elif_match = re.search('else if', file_string[position:])
                 if elif_match:
                     elif_statement.ignore(comment)
-                    data = elif_statement.parseString(file_content)
+                    data = elif_statement.parseString(file_string[position:])
                 else:
                     else_statement.ignore(comment)
-                    data = else_statement.parseString(file_content)
+                    data = else_statement.parseString(file_string[position:])
             elif found == 'if':
                 if_statement.ignore(comment)
-                data = if_statement.parseString(file_content)
+                data = if_statement.parseString(file_string[position:])
             elif found == 'for':
                 for_statement.ignore(comment)
-                data = for_statement.parseString(file_content)
+                data = for_statement.parseString(file_string[position:])
             elif found == 'mutate':
                 mutate.ignore(comment)
-                data = mutate.parseString(file_content)
+                data = mutate.parseString(file_string[position:])
             elif found == 'gsub':
                 gsub.ignore(comment)
-                data = gsub.parseString(file_content)
+                data = gsub.parseString(file_string[position:])
             elif found == 'replace':
                 replace.ignore(comment)
-                data = replace.parseString(file_content)
+                data = replace.parseString(file_string[position:])
             elif found == 'merge':
                 merge.ignore(comment)
-                data = merge.parseString(file_content)
+                data = merge.parseString(file_string[position:])
             elif found == 'rename':
                 rename.ignore(comment)
-                data = rename.parseString(file_content)
+                data = rename.parseString(file_string[position:])
             elif found == 'convert':
                 convert.ignore(comment)
-                data = convert.parseString(file_content)
+                data = convert.parseString(file_string[position:])
             elif found == 'uppercase':
                 uppercase.ignore(comment)
-                data = uppercase.parseString(file_content)
+                data = uppercase.parseString(file_string[position:])
             elif found == 'lowercase':
                 lowercase.ignore(comment)
-                data = lowercase.parseString(file_content)
+                data = lowercase.parseString(file_string[position:])
+            elif found == 'copy':
+                copy.ignore(comment)
+                data = copy.parseString(file_string[position:])
             elif found == 'grok':
                 grok.ignore(comment)
-                data = grok.parseString(file_content)
+                data = grok.parseString(file_string[position:])
             elif found == 'match':
                 match.ignore(comment)
-                data = match.parseString(file_content)
+                data = match.parseString(file_string[position:])
             elif found == 'overwrite':
                 overwrite.ignore(comment)
-                data = overwrite.parseString(file_content)
+                data = overwrite.parseString(file_string[position:])
             elif found == 'date':
                 date.ignore(comment)
-                data = date.parseString(file_content)
+                data = date.parseString(file_string[position:])
             elif found == 'date_match':
                 date_match.ignore(comment)
-                data = date_match.parseString(file_content)
+                data = date_match.parseString(file_string[position:])
             elif found == 'csv':
                 csv.ignore(comment)
-                data = csv.parseString(file_content)
+                data = csv.parseString(file_string[position:])
             elif found == 'json':
                 json.ignore(comment)
-                data = json.parseString(file_content)
+                data = json.parseString(file_string[position:])
             elif found == 'kv':
                 kv.ignore(comment)
-                data = kv.parseString(file_content)
+                data = kv.parseString(file_string[position:])
             elif found == 'drop':
                 drop.ignore(comment)
-                data = drop.parseString(file_content)
+                data = drop.parseString(file_string[position:])
             else:
-                return parser_error_message
-            return parser_error_message
+                return (position, message)
+            return (position, message)
         except exceptions.ParseException as oopsie:
-            new_error_message = str(oopsie)
-            # check the error message for a line number
-            new_match = re.search("\(at char ([\d]+)\), \(line:([\d]+)", new_error_message)
-            # if there's a match, continue to recurse
-            if new_match:
-                new_char = int(new_match.group(1))
-                new_line = int(new_match.group(2))
-                char_num = char+new_char
-                line_num = line+new_line-1
-                new_error_message = re.sub("\(line:([\d]+)", f"(line:{line_num}", new_error_message)
-                new_error_message = re.sub("\(at char ([\d]+)\)", f"(at char {char_num})", new_error_message)
-                return drilldown_parser_error(new_error_message)
+            new_location = position + oopsie.loc
+            return drilldown_parser_error(new_location, str(oopsie))
 
 chronicle_command = "chronicle parser test"
 config_file = args.config_file
@@ -377,12 +364,16 @@ if only_errors:
 
 # Parse the Logstash configuration using the defined grammar
 try:
-    entire_file_lines = open(config_file).readlines()
-    entire_file = open(config_file).read()
-    print(testing.with_line_numbers(entire_file))
     parsed_data = parser_language.parseFile(config_file)
 except exceptions.ParseException as oopsie:
-    if_statement.set_debug()
-    print(testing.with_line_numbers(entire_file))
-    # drilldown_parser_error(str(oopsie), entire_file_lines)
+    file_string = open(config_file).read()
+    error = drilldown_parser_error(oopsie.loc, str(oopsie))
+    pos, msg = error
+    msg = re.sub('char [\d]+', f'char {pos}', msg)
+    msg = re.sub('line:[\d]+', f'line:{lineno(pos, file_string)}', msg)
+    msg = re.sub('column:[\d]+', f'col:{col(pos, file_string)}', msg)
+    msg = re.sub('^,', 'Expected unknown,', msg)
+    print(line(pos, file_string))
+    print(" " * (col(pos, file_string) - 1) + "^")
+    print(msg)
             
