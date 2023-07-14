@@ -190,13 +190,13 @@ expression = eval_expression | bool_expression
 statement <<= (expression + ZeroOrMore(and_or + statement)) | lparen + expression + ZeroOrMore(and_or + statement) + rparen
 # Ex. if [if_statement_comparisons] and/or [if_statement_comparisons] { [body] }
 if_keyword = Keyword("if")
-if_statement <<= if_keyword + statement + lbrace + OneOrMore(if_else_chain|for_statement|mutate|grok|json|csv|kv|date|drop) + rbrace
+if_statement <<= if_keyword + statement + lbrace + OneOrMore(if_else_chain|for_statement|mutate|grok|json|csv|kv|date|drop|copy) + rbrace
 # Ex. else if [if_statement_comparisons] [and_or] [if_statement_comparisons] { [body] }
 elif_keyword = Keyword("else if")
-elif_statement <<= elif_keyword + statement + lbrace + OneOrMore(if_else_chain|for_statement|mutate|grok|json|csv|kv|date|drop) + rbrace
+elif_statement <<= elif_keyword + statement + lbrace + OneOrMore(if_else_chain|for_statement|mutate|grok|json|csv|kv|date|drop|copy) + rbrace
 # Ex. else { [body] }
 else_keyword = Keyword("else")
-else_statement <<= else_keyword + lbrace + OneOrMore(if_else_chain|for_statement|mutate|grok|json|csv|kv|date|drop) + rbrace
+else_statement <<= else_keyword + lbrace + OneOrMore(if_else_chain|for_statement|mutate|grok|json|csv|kv|date|drop|copy) + rbrace
 if_else_chain <<= if_statement + ZeroOrMore(elif_statement) + Opt(else_statement)
 
 #########################
@@ -206,7 +206,7 @@ if_else_chain <<= if_statement + ZeroOrMore(elif_statement) + Opt(else_statement
 in_keyword = Keyword("in")
 # Ex. for index, value in [identifier] { [body] }
 for_keyword = Keyword("for")
-for_statement <<= for_keyword + Opt(identifier + comma) + identifier + in_keyword + identifier + lbrace + OneOrMore(if_else_chain|for_statement|mutate|grok|json|csv|kv|date|drop) + rbrace
+for_statement <<= for_keyword + Opt(identifier + comma) + identifier + in_keyword + identifier + lbrace + OneOrMore(if_else_chain|for_statement|mutate|grok|json|csv|kv|date|drop|copy) + rbrace
 
 # filter keyword
 filter_keyword = Keyword("filter")
@@ -258,7 +258,7 @@ filter_keyword.set_parse_action(lambda string,position,token: FilterToken(positi
 #######################################################
 # Chronicle Logstash context-free language definition #
 #######################################################
-parser_language = filter_keyword + lbrace + OneOrMore(if_else_chain|for_statement|mutate|grok|json|csv|kv|date|drop) + rbrace
+parser_language = filter_keyword + lbrace + OneOrMore(if_else_chain|for_statement|mutate|grok|json|csv|kv|date|drop|copy) + rbrace
 # Ignore commented statements
 comment = Literal('#') + ... + LineEnd()
 parser_language.ignore(comment)
