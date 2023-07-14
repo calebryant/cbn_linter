@@ -8,7 +8,7 @@ from pyparsing import (
     Opt, QuotedString, ZeroOrMore, Group,
     OneOrMore, Keyword, Literal, Forward, SkipTo,
     Dict, LineStart, LineEnd, srange, exceptions,
-    Each, lineno, col
+    Each, lineno, col, testing
 )
 
 parser = argparse.ArgumentParser(
@@ -358,26 +358,31 @@ def drilldown_parser_error(parser_error_message, verbose=True):
                 new_error_message = re.sub("\(at char ([\d]+)\)", f"(at char {char_num})", new_error_message)
                 return drilldown_parser_error(new_error_message)
 
+chronicle_command = "chronicle parser test"
+config_file = args.config_file
+log_file = args.log_file
+customer = args.customer
+log_type = args.log_type
+only_errors = args.only_errors
+if config_file:
+    chronicle_command += f' -f {config_file}'
+if log_file:
+    chronicle_command += f' -t {log_file}'
+if customer:
+    chronicle_command += f' -c {customer}'
+if log_type:
+    chronicle_command += f' -l {log_type}'
+if only_errors:
+    chronicle_command += f' -e'
+
 # Parse the Logstash configuration using the defined grammar
 try:
-    chronicle_command = "chronicle parser test"
-    config_file = args.config_file
-    log_file = args.log_file
-    customer = args.customer
-    log_type = args.log_type
-    only_errors = args.only_errors
-    if config_file:
-        chronicle_command += f' -f {config_file}'
-    if log_file:
-        chronicle_command += f' -t {log_file}'
-    if customer:
-        chronicle_command += f' -c {customer}'
-    if log_type:
-        chronicle_command += f' -l {log_type}'
-    if only_errors:
-        chronicle_command += f' -e'
     entire_file_lines = open(config_file).readlines()
+    entire_file = open(config_file).read()
+    print(testing.with_line_numbers(entire_file))
     parsed_data = parser_language.parseFile(config_file)
 except exceptions.ParseException as oopsie:
-    drilldown_parser_error(str(oopsie), entire_file_lines)
+    if_statement.set_debug()
+    print(testing.with_line_numbers(entire_file))
+    # drilldown_parser_error(str(oopsie), entire_file_lines)
             
