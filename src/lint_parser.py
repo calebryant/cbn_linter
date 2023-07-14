@@ -48,7 +48,7 @@ rparen = Literal(')')
 # Comma character
 comma = Literal(',')
 # Variable names, not quoted
-identifier = Word(srange("[@A-Za-z0-9_.\-]"))
+identifier = Word(srange("[a-zA-Z0-9_.\-@]"))
 # Strings surrounded by "" or ''
 quoted_string = QuotedString('"', escChar='\\') | QuotedString("'", escChar='\\')
 # Boolean value
