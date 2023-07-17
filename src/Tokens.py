@@ -253,15 +253,15 @@ def createTokens(config_file):
     l_value = identifier | quoted_string
     # Strict list definition, used in if/for loop statements, cannot have empty indices
     # Ex. ["1", "2", "3"]
-    strict_list = lbracket + r_value + ZeroOrMore(comma + r_value) + rbracket
+    strict_list = lbracket + r_value - ZeroOrMore(comma + r_value) + rbracket
     # Lazy list definition, used in filter config options, commas optional and empty indices allowed
     # Ex. ["1" "2", "3", ,]
-    lazy_list = lbracket + ZeroOrMore(comma|r_value|identifier) + rbracket
+    lazy_list = lbracket - ZeroOrMore(comma|r_value|identifier) + rbracket
     # Key value pair definition
     # Ex. replace => { "udm_field" => "value" }, '"udm_field" => "value"' is a key_value_pair
-    key_value_pair = l_value + assign + r_value + Opt(comma)
+    key_value_pair = l_value + assign + r_value - Opt(comma)
     # Hash, a hash is a collection of key value pairs specified in the format "field1" => "value1". Note that multiple key value entries are separated by spaces rather than commas.
-    hash_val = lbrace + OneOrMore(key_value_pair) + rbrace
+    hash_val = lbrace - OneOrMore(key_value_pair) + rbrace
     # Config option, used in filter plugins
     # Ex. on_error => "error"
     config_option = identifier + assign + (quoted_string|lazy_list|boolean)
@@ -278,12 +278,12 @@ def createTokens(config_file):
     ################
     # Grok pattern syntax definition
     # Ex. "message" => [ list of grok patterns ]
-    grok_key_value_pair = quoted_string + assign + (lazy_list|quoted_string) + Opt(comma)
+    grok_key_value_pair = quoted_string + assign + (lazy_list|quoted_string) - Opt(comma)
     # Match keyword
     match_keyword = Keyword("match")
     # Match function definition
     # Ex. match => { grok key value pairs } overwrite on_error
-    match = match_keyword + assign + lbrace + OneOrMore(grok_key_value_pair) + rbrace + ZeroOrMore(config_option)
+    match = match_keyword + assign + lbrace - OneOrMore(grok_key_value_pair) + rbrace - ZeroOrMore(config_option)
     # Grok keyword
     grok_keyword = Keyword("grok")
     # Overall grok filter definition
@@ -294,9 +294,9 @@ def createTokens(config_file):
     # Mutate plugin function grammar #
     ##################################
     # Ex. gsub => [ gsub expressions ]
-    gsub_exression = quoted_string + comma + quoted_string + comma + quoted_string + Opt(comma)
+    gsub_exression = quoted_string + comma + quoted_string + comma + quoted_string - Opt(comma)
     gsub_keyword = Keyword("gsub")
-    gsub = gsub_keyword + assign + lbracket + OneOrMore(gsub_exression) + rbracket
+    gsub = gsub_keyword + assign + lbracket - OneOrMore(gsub_exression) + rbracket
     # Ex. lowercase => [ list of strings ]
     lowercase_keyword = Keyword("lowercase")
     lowercase = lowercase_keyword + assign + lazy_list
@@ -318,23 +318,23 @@ def createTokens(config_file):
     # Ex. copy => { [key_value_pair] }
     copy_keyword = Keyword("copy")
     copy = convert_keyword + assign + hash_val
-    functions = (replace | merge | rename | convert | copy | gsub | lowercase | uppercase) + ZeroOrMore(config_option)
+    functions = (replace | merge | rename | convert | copy | gsub | lowercase | uppercase) - ZeroOrMore(config_option)
     # Ex. mutate { [functions] on_error }
     mutate_keyword = Keyword("mutate")
-    mutate = mutate_keyword + lbrace + OneOrMore(functions) + rbrace
+    mutate = mutate_keyword + lbrace - OneOrMore(functions) + rbrace
 
     #########################
     # CSV, KV, JSON grammar #
     #########################
     # Ex. json => { options list }
     json_keyword = Keyword("json")
-    json = json_keyword + lbrace + OneOrMore(config_option) + rbrace
+    json = json_keyword + lbrace - OneOrMore(config_option) + rbrace
     # Ex. csv => { options list }
     csv_keyword = Keyword("csv")
-    csv = csv_keyword + lbrace + OneOrMore(config_option) + rbrace
+    csv = csv_keyword + lbrace - OneOrMore(config_option) + rbrace
     # Ex. kv => { options list }
     kv_keyword = Keyword("kv")
-    kv = kv_keyword + lbrace + OneOrMore(config_option) + rbrace
+    kv = kv_keyword + lbrace - OneOrMore(config_option) + rbrace
 
     ################
     # Date grammar #
@@ -343,14 +343,14 @@ def createTokens(config_file):
     date_match = match_keyword + assign + lazy_list
     # Ex. date { match statement and options }
     date_keyword = Keyword("date")
-    date = date_keyword + lbrace + date_match + OneOrMore(config_option) + rbrace
+    date = date_keyword + lbrace + date_match - OneOrMore(config_option) + rbrace
 
     ################
     # Drop grammar #
     ################
     # Ex. drop { tag => "MALFORMED" }
     drop_keyword = Keyword("drop")
-    drop = drop_keyword + lbrace + Opt(config_option) + rbrace
+    drop = drop_keyword + lbrace - Opt(config_option) + rbrace
 
     ################################
     # If/if else statement grammar #
@@ -377,17 +377,17 @@ def createTokens(config_file):
     # Ex. ![identifier]
     bool_expression = Opt(bool_neg) + (if_statement_id | (lparen + if_statement_id + rparen))
     expression = eval_expression | bool_expression
-    statement <<= (expression + ZeroOrMore(and_or + statement)) | ((lparen + expression + ZeroOrMore(and_or + statement) + rparen) + ZeroOrMore(and_or + statement))
+    statement <<= (expression - ZeroOrMore(and_or + statement)) | ((lparen + expression - ZeroOrMore(and_or + statement) + rparen) - ZeroOrMore(and_or + statement))
     # Ex. if [if_statement_comparisons] and/or [if_statement_comparisons] { [body] }
     if_keyword = Keyword("if")
-    if_statement <<= if_keyword + statement + lbrace + OneOrMore(if_else_chain|for_statement|mutate|grok|json|csv|kv|date|drop|copy) + rbrace
+    if_statement <<= if_keyword + statement + lbrace - OneOrMore(if_else_chain|for_statement|mutate|grok|json|csv|kv|date|drop|copy) + rbrace
     # Ex. else if [if_statement_comparisons] [and_or] [if_statement_comparisons] { [body] }
     elif_keyword = Keyword("else if")
-    elif_statement <<= elif_keyword + statement + lbrace + OneOrMore(if_else_chain|for_statement|mutate|grok|json|csv|kv|date|drop|copy) + rbrace
+    elif_statement <<= elif_keyword + statement + lbrace - OneOrMore(if_else_chain|for_statement|mutate|grok|json|csv|kv|date|drop|copy) + rbrace
     # Ex. else { [body] }
     else_keyword = Keyword("else")
-    else_statement <<= else_keyword + lbrace + OneOrMore(if_else_chain|for_statement|mutate|grok|json|csv|kv|date|drop|copy) + rbrace
-    if_else_chain <<= if_statement + ZeroOrMore(elif_statement) + Opt(else_statement)
+    else_statement <<= else_keyword + lbrace - OneOrMore(if_else_chain|for_statement|mutate|grok|json|csv|kv|date|drop|copy) + rbrace
+    if_else_chain <<= if_statement - ZeroOrMore(elif_statement) - Opt(else_statement)
 
     #########################
     # For statement grammar #
@@ -396,7 +396,7 @@ def createTokens(config_file):
     in_keyword = Keyword("in")
     # Ex. for index, value in [identifier] { [body] }
     for_keyword = Keyword("for")
-    for_statement <<= for_keyword + Opt(identifier + comma) + identifier + in_keyword + identifier + lbrace + OneOrMore(if_else_chain|for_statement|mutate|grok|json|csv|kv|date|drop|copy) + rbrace
+    for_statement <<= for_keyword - Opt(identifier + comma) + identifier + in_keyword + identifier + lbrace - OneOrMore(if_else_chain|for_statement|mutate|grok|json|csv|kv|date|drop|copy) + rbrace
 
     # filter keyword
     filter_keyword = Keyword("filter")
@@ -448,103 +448,13 @@ def createTokens(config_file):
     #######################################################
     # Chronicle Logstash context-free language definition #
     #######################################################
-    parser_language = filter_keyword + lbrace + OneOrMore(if_else_chain|for_statement|mutate|grok|json|csv|kv|date|drop|copy) + rbrace
+    parser_language = filter_keyword + lbrace - OneOrMore(if_else_chain|for_statement|mutate|grok|json|csv|kv|date|drop|copy) + rbrace
     # Ignore commented statements
     comment = Literal('#') + ... + LineEnd()
     parser_language.ignore(comment)
 
-    # Recursive function to find and print the exact position of a parser error to the terminal
-    # Breaks the string down into smaller bits and attempts to re-parse
-    def drilldown_parser_error(position, message):
-        match = re.search("found '(.+)'", message)
-        if match:
-            found = match.group(1)
-            try:
-                if found == 'else':
-                    elif_match = re.search('else if', file_string[position:])
-                    if elif_match:
-                        elif_statement.ignore(comment)
-                        data = elif_statement.parseString(file_string[position:])
-                    else:
-                        else_statement.ignore(comment)
-                        data = else_statement.parseString(file_string[position:])
-                elif found == 'if':
-                    if_statement.ignore(comment)
-                    data = if_statement.parseString(file_string[position:])
-                elif found == 'for':
-                    for_statement.ignore(comment)
-                    data = for_statement.parseString(file_string[position:])
-                elif found == 'mutate':
-                    mutate.ignore(comment)
-                    data = mutate.parseString(file_string[position:])
-                elif found == 'gsub':
-                    gsub.ignore(comment)
-                    data = gsub.parseString(file_string[position:])
-                elif found == 'replace':
-                    replace.ignore(comment)
-                    data = replace.parseString(file_string[position:])
-                elif found == 'merge':
-                    merge.ignore(comment)
-                    data = merge.parseString(file_string[position:])
-                elif found == 'rename':
-                    rename.ignore(comment)
-                    data = rename.parseString(file_string[position:])
-                elif found == 'convert':
-                    convert.ignore(comment)
-                    data = convert.parseString(file_string[position:])
-                elif found == 'uppercase':
-                    uppercase.ignore(comment)
-                    data = uppercase.parseString(file_string[position:])
-                elif found == 'lowercase':
-                    lowercase.ignore(comment)
-                    data = lowercase.parseString(file_string[position:])
-                elif found == 'copy':
-                    copy.ignore(comment)
-                    data = copy.parseString(file_string[position:])
-                elif found == 'grok':
-                    grok.ignore(comment)
-                    data = grok.parseString(file_string[position:])
-                elif found == 'match':
-                    match.ignore(comment)
-                    data = match.parseString(file_string[position:])
-                elif found == 'overwrite':
-                    overwrite.ignore(comment)
-                    data = overwrite.parseString(file_string[position:])
-                elif found == 'date':
-                    date.ignore(comment)
-                    data = date.parseString(file_string[position:])
-                elif found == 'date_match':
-                    date_match.ignore(comment)
-                    data = date_match.parseString(file_string[position:])
-                elif found == 'csv':
-                    csv.ignore(comment)
-                    data = csv.parseString(file_string[position:])
-                elif found == 'json':
-                    json.ignore(comment)
-                    data = json.parseString(file_string[position:])
-                elif found == 'kv':
-                    kv.ignore(comment)
-                    data = kv.parseString(file_string[position:])
-                elif found == 'drop':
-                    drop.ignore(comment)
-                    data = drop.parseString(file_string[position:])
-                else:
-                    return (position, message)
-                return (position, message)
-            except exceptions.ParseException as oopsie:
-                new_location = position + oopsie.loc
-                return drilldown_parser_error(new_location, str(oopsie))
     try:
         return parser_language.parseFile(config_file)
-    except exceptions.ParseException as oopsie:
-        file_string = open(config_file).read()
-        error = drilldown_parser_error(oopsie.loc, str(oopsie))
-        pos, msg = error
-        msg = re.sub('char [\d]+', f'char {pos}', msg)
-        msg = re.sub('line:[\d]+', f'line:{lineno(pos, file_string)}', msg)
-        msg = re.sub('column:[\d]+', f'col:{col(pos, file_string)}', msg)
-        msg = re.sub('^,', 'Expected unknown,', msg)
-        print(line(pos, file_string))
-        print(" " * (col(pos, file_string) - 1) + "^")
-        print(msg)
+    except exceptions.ParseSyntaxException as oopsie:
+        print(oopsie.explain())
 
