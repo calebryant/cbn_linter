@@ -166,7 +166,7 @@ class Grammar:
         # Ex. copy => { [key_value_pair] }
         copy_keyword = Keyword("copy")
         copy_keyword.set_name("copy_keyword")
-        copy = convert_keyword + assign + hash_val
+        copy = copy_keyword + assign + hash_val
         copy.set_name("copy")
         functions = (replace | merge | rename | convert | copy | gsub | lowercase | uppercase) - ZeroOrMore(config_option)
         functions.set_name("functions")
