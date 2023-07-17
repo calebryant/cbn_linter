@@ -1,8 +1,9 @@
 # auther: caleb.bryant@cyderes.com
 # created: 2023/04/02
 
-import argparse
-from Tokens import createTokens
+import argparse, re
+from pyparsing import exceptions
+from Grammar import Grammar
 
 parser = argparse.ArgumentParser(
     prog='lint_parser.py',
@@ -34,4 +35,25 @@ if log_type:
 if only_errors:
     chronicle_command += f' -e'
 
-createTokens(config_file)
+if config_file:
+    grammar = Grammar()
+    try:
+        open_file = open(config_file)
+        file_string = open_file.read()
+        tokens = grammar.parse_string(file_string)
+        for token in tokens:    
+            print(token)
+    except exceptions.ParseSyntaxException as oopsie:
+        match = re.search("found '(.*)'", str(oopsie))
+        if match:
+            found = match.group(1)
+        else:
+            found = ''
+        char_num = oopsie.loc
+        line_num = oopsie.lineno
+        col_num = oopsie.col
+        # print(oopsie.explain())
+        print(f"ParseSyntaxException: Found unexpected token '{found}' at (line:{line_num}, col:{col_num}), char: {char_num}")
+        print(oopsie.line)
+        print(" " * (oopsie.column - 1) + "^")
+        exit(1)
