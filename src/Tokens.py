@@ -1,3 +1,9 @@
+# Created 2023/07/12
+# Author: Caleb Bryant
+# Title: Tokens.py
+# Description: This file defines a Token class that represent all the valid syntax tokens allowed in a Chronicle parser config file.
+# References: https://www.geeksforgeeks.org/introduction-of-lexical-analysis/
+
 class Token:
 	def __init__(self, position, column, row):
 		self.pos = position

@@ -1,5 +1,5 @@
 import os
-import Grammar
+from Grammar import Grammar
 
 standard_parsers_dir = "/Users/caleb.bryant/Library/CloudStorage/OneDrive-Cyderes/TelEng/github/cyderes-parsers/standard"
 override_parsers_dir = "/Users/caleb.bryant/Library/CloudStorage/OneDrive-Cyderes/TelEng/github/cyderes-parsers/overrides"
@@ -19,7 +19,7 @@ for path, folders, filenames in standard_parsers_folders:
         for name in filenames:
             print(f"{path}/{name}")
             results.write(f"{path}/{name}\n")
-            parse_attempt = language_grammar.gen_tokens(f"{path}/{name}")
+            parse_attempt = language_grammar.parse_file(f"{path}/{name}")
             if not parse_attempt:
                 exit(0)
 
@@ -28,7 +28,7 @@ for path, folders, filenames in override_parsers_folders:
         for name in filenames:
             print(f"{path}/{name}")
             results.write(f"{path}/{name}\n")
-            parse_attempt = language_grammar.gen_tokens(f"{path}/{name}")
+            parse_attempt = language_grammar.parse_file(f"{path}/{name}")
             if not parse_attempt:
                 exit(0)
 
@@ -37,7 +37,7 @@ for path, folders, filenames in default_parsers_folders:
         for name in filenames:
             print(f"{path}/{name}")
             results.write(f"{path}/{name}\n")
-            parse_attempt = language_grammar.gen_tokens(f"{path}/{name}")
+            parse_attempt = language_grammar.parse_file(f"{path}/{name}")
             if not parse_attempt:
                 exit(0)
     else:
@@ -45,6 +45,6 @@ for path, folders, filenames in default_parsers_folders:
             for name in filenames:
                 print(f"{path}/{name}")
                 results.write(f"{path}/{name}\n")
-                parse_attempt = language_grammar.gen_tokens(f"{path}/{folder}/{name}")
+                parse_attempt = language_grammar.parse_file(f"{path}/{folder}/{name}")
                 if not parse_attempt:
                     exit(0)

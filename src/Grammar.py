@@ -1,3 +1,12 @@
+# Created 2023/07/12
+# Author: Caleb Bryant
+# Title: Grammar.py
+# Description: This file defines a Grammar class that contains the grammar definitions of a Chronicle parser config file.
+# References:
+    # https://pyparsing-docs.readthedocs.io/en/latest/HowToUsePyparsing.html, 
+    # https://www.geeksforgeeks.org/introduction-to-grammar-in-theory-of-computation/
+
+
 from Tokens import *
 from pyparsing import (
     Word, alphanums, alphas, nums, Combine,
@@ -89,8 +98,6 @@ class Grammar:
         else_statement.set_name("else_statement")
         for_statement = Forward()
         for_statement.set_name("for_statement")
-        if_else_chain = Forward()
-        if_else_chain.set_name("if_else_chain")
         statement = Forward()
         statement.set_name("statement")
 
@@ -234,7 +241,7 @@ class Grammar:
         and_or = Keyword("and") | Keyword("or") | Keyword('||') | Keyword('&&')
         and_or.set_name("and_or")
         # Evaluation statement, has a left and right val separated by an binary_operator, can be surrounded by parentheses
-        eval_expression = (if_statement_val - binary_operator - if_statement_val) | (lparen + if_statement_id - binary_operator - if_statement_val + lparen)
+        eval_expression = (if_statement_val + binary_operator + if_statement_val) | (lparen + if_statement_id + binary_operator + if_statement_val + lparen)
         eval_expression.set_name("eval_expression")
         # Boolean negate literal
         unary_operator = Literal('!') | Keyword("not")
@@ -245,20 +252,19 @@ class Grammar:
         bool_expression.set_name("bool_expression")
         expression = eval_expression | bool_expression
         expression.set_name("expression")
-        statement <<= (expression - ZeroOrMore(and_or - statement)) | ((lparen + expression - ZeroOrMore(and_or - statement) + rparen) - ZeroOrMore(and_or + statement))
+        statement <<= (expression + ZeroOrMore(and_or + statement)) | ((lparen + expression + ZeroOrMore(and_or + statement) + rparen) + ZeroOrMore(and_or + statement))
         # Ex. if [if_statement_comparisons] and/or [if_statement_comparisons] { [body] }
         if_keyword = Keyword("if")
         if_keyword.set_name("if_keyword")
-        if_statement <<= if_keyword - statement - lbrace - OneOrMore(Group(if_else_chain|for_statement|mutate|grok|json|csv|kv|date|drop|copy)) - rbrace
+        if_statement <<= if_keyword - statement + lbrace - OneOrMore(Group(if_statement|elif_statement|else_statement|for_statement|mutate|grok|json|csv|kv|date|drop|copy)) + rbrace
         # Ex. else if [if_statement_comparisons] [and_or] [if_statement_comparisons] { [body] }
         elif_keyword = Keyword("else if")
         elif_keyword.set_name("elif_keyword")
-        elif_statement <<= elif_keyword + statement + lbrace - OneOrMore(Group(if_else_chain|for_statement|mutate|grok|json|csv|kv|date|drop|copy)) + rbrace
+        elif_statement <<= elif_keyword - statement + lbrace - OneOrMore(Group(if_statement|elif_statement|else_statement|for_statement|mutate|grok|json|csv|kv|date|drop|copy)) + rbrace
         # Ex. else { [body] }
         else_keyword = Keyword("else")
         else_keyword.set_name("else_keyword")
-        else_statement <<= else_keyword + lbrace - OneOrMore(Group(if_else_chain|for_statement|mutate|grok|json|csv|kv|date|drop|copy)) + rbrace
-        if_else_chain <<= Group(if_statement) - ZeroOrMore(Group(elif_statement)) - Opt(Group(else_statement))
+        else_statement <<= else_keyword - lbrace - OneOrMore(Group(if_statement|elif_statement|else_statement|for_statement|mutate|grok|json|csv|kv|date|drop|copy)) - rbrace
 
         #########################
         # For statement grammar #
@@ -269,7 +275,7 @@ class Grammar:
         # Ex. for index, value in [identifier] { [body] }
         for_keyword = Keyword("for")
         for_keyword.set_name("for_keyword")
-        for_statement <<= for_keyword - Opt(identifier + comma) + identifier + in_keyword + identifier + lbrace - OneOrMore(Group(if_else_chain|for_statement|mutate|grok|json|csv|kv|date|drop|copy)) + rbrace
+        for_statement <<= for_keyword - Opt(identifier + comma) + identifier + in_keyword + (identifier|strict_list) + lbrace - OneOrMore(Group(if_statement|elif_statement|else_statement|for_statement|mutate|grok|json|csv|kv|date|drop|copy)) + rbrace
         for_statement.set_name("for_statement")
 
         # filter keyword
@@ -323,7 +329,7 @@ class Grammar:
         #######################################################
         # Chronicle Logstash context-free language definition #
         #######################################################
-        self.grammars = StringStart() + filter_keyword + lbrace - OneOrMore(Group(if_else_chain|for_statement|mutate|grok|json|csv|kv|date|drop|copy)) + rbrace + StringEnd()
+        self.grammars = StringStart() + filter_keyword + lbrace - OneOrMore(Group(if_statement|elif_statement|else_statement|for_statement|mutate|grok|json|csv|kv|date|drop)) + rbrace + StringEnd()
         # Ignore commented statements
         comment = Literal('#') + ... + LineEnd()
         self.grammars.ignore(comment)

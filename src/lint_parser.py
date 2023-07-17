@@ -52,7 +52,7 @@ if config_file:
         char_num = oopsie.loc
         line_num = oopsie.lineno
         col_num = oopsie.col
-        # print(oopsie.explain())
+        print(oopsie.explain())
         print(f"ParseSyntaxException: Found unexpected token '{found}' at (line:{line_num}, col:{col_num}), char: {char_num}")
         print(oopsie.line)
         print(" " * (oopsie.column - 1) + "^")
