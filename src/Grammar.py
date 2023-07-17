@@ -87,7 +87,7 @@ class Grammar:
         hash_val.set_name("hash_val")
         # Config option, used in filter plugins
         # Ex. on_error => "error"
-        config_option = identifier + assign + (string_val|lazy_list|boolean)
+        config_option = identifier + assign + (string_val|lazy_list|boolean) + Opt(comma)
         config_option.set_name("config_option")
         # recursive objects to be defined later on
         if_statement = Forward()
@@ -178,6 +178,8 @@ class Grammar:
         overwrite.set_name("overwrite")
         functions = (replace | merge | rename | convert | copy | gsub | lowercase | uppercase | remove_field | overwrite) - ZeroOrMore(config_option)
         functions.set_name("functions")
+        function_keywords = replace_keyword | merge_keyword | rename_keyword | convert_keyword | copy_keyword | gsub_keyword | lowercase_keyword | uppercase_keyword | remove_field_keyword | overwrite_keyword
+        function_keywords.ignore(Literal('"') | Literal("'"))
         # Ex. mutate { [functions] on_error }
         mutate_keyword = Keyword("mutate")
         mutate_keyword.set_name("mutate_keyword")
@@ -207,7 +209,7 @@ class Grammar:
         # Date grammar #
         ################
         # Ex. match => [ list of quoted strings ]
-        date_match = match_keyword + assign + lazy_list
+        date_match = match_keyword + assign + lazy_list + Opt(comma)
         date_match.set_name("date_match")
         # Ex. date { match statement and options }
         date_keyword = Keyword("date")
@@ -269,7 +271,7 @@ class Grammar:
         bool_expression.set_name("bool_expression")
         expression = eval_expression | bool_expression
         expression.set_name("expression")
-        statement = SkipTo(lbrace)
+        statement = SkipTo(lbrace, ignore=string_val|regex_vals)
         statement.set_name("statement")
         # Ex. if [if_statement_comparisons] and/or [if_statement_comparisons] { [body] }
         if_keyword = Keyword("if")
@@ -351,7 +353,7 @@ class Grammar:
         self.grammars = StringStart() + filter_keyword + lbrace - OneOrMore(Group(if_statement|elif_statement|else_statement|for_statement|mutate|grok|json|csv|kv|date|drop)) + rbrace + StringEnd()
         # Ignore commented statements
         comment = Literal('#') + ... + LineEnd()
-        self.grammars.ignore(comment)
+        self.grammars.ignore(comment|comma)
 
     def parse_file(self, file_name):
         return self.grammars.parse_file(file_name)
