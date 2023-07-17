@@ -180,6 +180,11 @@ class BoolNegateToken(Token):
 		super().__init__(position, column, row)
 		self.value = value
 
+class IfStatementToken(Token):
+	def __init__(self, position, column, row, value):
+		super().__init__(position, column, row)
+		self.value = value
+
 class IfToken(Token):
 	def __init__(self, position, column, row):
 		super().__init__(position, column, row)

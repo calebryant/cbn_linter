@@ -98,8 +98,6 @@ class Grammar:
         else_statement.set_name("else_statement")
         for_statement = Forward()
         for_statement.set_name("for_statement")
-        statement = Forward()
-        statement.set_name("statement")
 
         ################
         # Grok grammar #
@@ -127,7 +125,7 @@ class Grammar:
         # Mutate plugin function grammar #
         ##################################
         # Ex. gsub => [ gsub expressions ]
-        gsub_exression = string_val + comma + string_val + comma + string_val + Opt(comma)
+        gsub_exression = string_val + Opt(comma) + string_val + Opt(comma) + string_val + Opt(comma)
         gsub_exression.set_name("gsub_exression")
         gsub_keyword = Keyword("gsub")
         gsub_keyword.set_name("gsub_keyword")
@@ -217,6 +215,15 @@ class Grammar:
         date = date_keyword + lbrace + date_match - ZeroOrMore(config_option) + rbrace
         date.set_name("date")
 
+        ##################
+        # Base64 grammar #
+        ##################
+        # Ex. base64 => { options list }
+        base64_keyword = Keyword("base64")
+        base64_keyword.set_name("base64_keyword")
+        base64 = base64_keyword + lbrace - OneOrMore(config_option) + rbrace
+        base64.set_name("base64")
+
         ################
         # Drop grammar #
         ################
@@ -258,23 +265,24 @@ class Grammar:
         unary_operator.set_name("unary_operator")
         # Boolean statement
         # Ex. ![identifier]
-        bool_expression = Opt(unary_operator) + (if_statement_id | (lparen + if_statement_id + rparen))
+        bool_expression = (unary_operator + eval_expression) | (Opt(unary_operator) + if_statement_id)
         bool_expression.set_name("bool_expression")
         expression = eval_expression | bool_expression
         expression.set_name("expression")
-        statement <<= (expression + ZeroOrMore(and_or + statement)) | ((lparen + expression + ZeroOrMore(and_or + statement) + rparen) + ZeroOrMore(and_or + statement))
+        statement = SkipTo(lbrace)
+        statement.set_name("statement")
         # Ex. if [if_statement_comparisons] and/or [if_statement_comparisons] { [body] }
         if_keyword = Keyword("if")
         if_keyword.set_name("if_keyword")
-        if_statement <<= if_keyword - statement + lbrace - OneOrMore(Group(if_statement|elif_statement|else_statement|for_statement|mutate|grok|json|csv|kv|date|drop|copy)) + rbrace
+        if_statement <<= if_keyword + statement + lbrace - OneOrMore(Group(if_statement|elif_statement|else_statement|for_statement|mutate|grok|json|csv|kv|date|drop|copy|base64)) + rbrace
         # Ex. else if [if_statement_comparisons] [and_or] [if_statement_comparisons] { [body] }
         elif_keyword = Keyword("else if")
         elif_keyword.set_name("elif_keyword")
-        elif_statement <<= elif_keyword - statement + lbrace - OneOrMore(Group(if_statement|elif_statement|else_statement|for_statement|mutate|grok|json|csv|kv|date|drop|copy)) + rbrace
+        elif_statement <<= elif_keyword - statement + lbrace - OneOrMore(Group(if_statement|elif_statement|else_statement|for_statement|mutate|grok|json|csv|kv|date|drop|copy|base64)) + rbrace
         # Ex. else { [body] }
         else_keyword = Keyword("else")
         else_keyword.set_name("else_keyword")
-        else_statement <<= else_keyword - lbrace - OneOrMore(Group(if_statement|elif_statement|else_statement|for_statement|mutate|grok|json|csv|kv|date|drop|copy)) - rbrace
+        else_statement <<= else_keyword - lbrace - OneOrMore(Group(if_statement|elif_statement|else_statement|for_statement|mutate|grok|json|csv|kv|date|drop|copy|base64)) - rbrace
 
         #########################
         # For statement grammar #
@@ -285,7 +293,7 @@ class Grammar:
         # Ex. for index, value in [identifier] { [body] }
         for_keyword = Keyword("for")
         for_keyword.set_name("for_keyword")
-        for_statement <<= for_keyword - Opt(identifier + comma) + identifier + in_keyword + (identifier|strict_list) + lbrace - OneOrMore(Group(if_statement|elif_statement|else_statement|for_statement|mutate|grok|json|csv|kv|date|drop|copy)) + rbrace
+        for_statement <<= for_keyword - Opt(identifier + comma) + identifier + in_keyword + (identifier|strict_list) + lbrace - OneOrMore(Group(if_statement|elif_statement|else_statement|for_statement|mutate|grok|json|csv|kv|date|drop|copy|base64)) + rbrace
         for_statement.set_name("for_statement")
 
         # filter keyword
@@ -331,6 +339,7 @@ class Grammar:
         unary_operator.set_parse_action(lambda string,position,token: BoolNegateToken(position, col(position,string), lineno(position,string), token.as_list()[0]))
         if_keyword.set_parse_action(lambda string,position,token: IfToken(position, col(position,string), lineno(position,string)))
         elif_keyword.set_parse_action(lambda string,position,token: ElseIfToken(position, col(position,string), lineno(position,string)))
+        statement.set_parse_action(lambda string,position,token: IfStatementToken(position, col(position,string), lineno(position,string), token.as_list()[0]))
         else_keyword.set_parse_action(lambda string,position,token: ElseToken(position, col(position,string), lineno(position,string)))
         in_keyword.set_parse_action(lambda string,position,token: InToken(position, col(position,string), lineno(position,string)))
         for_keyword.set_parse_action(lambda string,position,token: ForToken(position, col(position,string), lineno(position,string)))
