@@ -1,13 +1,11 @@
-import re
 from Tokens import *
 from pyparsing import (
     Word, alphanums, alphas, nums, Combine,
     Opt, QuotedString, ZeroOrMore, Group,
-    OneOrMore, Keyword, Literal, Forward, Optional,
-    SkipTo, Dict, LineStart, LineEnd, srange,
-    exceptions, Each, lineno, col, line, testing,
-    nested_expr, FollowedBy, original_text_for, 
-    LineStart, StringEnd, StringStart, trace_parse_action
+    OneOrMore, Keyword, Literal, Forward, SkipTo,
+    Dict, LineStart, LineEnd, srange, exceptions,
+    Each, lineno, col, line, testing, StringStart,
+    StringEnd
 )
 
 class Grammar:
@@ -21,226 +19,262 @@ class Grammar:
         ######################
         # Assignment character
         assign = Literal('=>') | Literal('=') | Literal(':')
-        assign.set_name("=>")
+        assign.set_name('=>')
         # Left brace character
         lbrace = Literal('{')
+        lbrace.set_name("{")
         # Right brace character
         rbrace = Literal('}')
+        rbrace.set_name("}")
         # Left bracket character
         lbracket = Literal('[')
+        lbracket.set_name("[")
         # Right bracket character
         rbracket = Literal(']')
+        rbracket.set_name("]")
         # Left parentheses
         lparen = Literal('(')
+        lparen.set_name("(")
         # Right parentheses
         rparen = Literal(')')
+        rparen.set_name(")")
         # Comma character
         comma = Literal(',')
+        comma.set_name(",")
         # Variable names, not quoted
         identifier = Word(srange("[a-zA-Z0-9_.\-@]"))
-        identifier.set_name("Identifier")
+        identifier.set_name("identifier")
         # Strings surrounded by "" or ''
         string_val = QuotedString('"', escChar='\\') | QuotedString("'", escChar='\\')
-        string_val.set_name("string")
+        string_val.set_name("string_val")
         # Boolean value
         boolean = Keyword("true") | Keyword("false")
-        boolean.set_name("boolean")
+        boolean.set_name("boolean_val")
         # Numerical values
         num_val = Word(nums + '.')
-        num_val.set_name("number")
+        num_val.set_name("num_val")
         # Values that go on the right side of an expression, 
         # Ex. replace => { "udm_field" => "value" }, "value" is the r_value
         r_value = string_val | num_val | boolean
+        r_value.set_name("r_value")
         # Values that go on the left side of an expression, 
         # Ex. replace => { "udm_field" => "value" }, "udm_field" is the l_value
         l_value = identifier | string_val
+        l_value.set_name("l_value")
         # Strict list definition, used in if/for loop statements, cannot have empty indices
         # Ex. ["1", "2", "3"]
-        strict_list = lbracket + r_value + ZeroOrMore(comma + r_value) + rbracket
+        strict_list = lbracket - r_value - ZeroOrMore(comma + r_value) - rbracket
         strict_list.set_name("strict_list")
         # Lazy list definition, used in filter config options, commas optional and empty indices allowed
         # Ex. ["1" "2", "3", ,]
-        lazy_list = lbracket + ZeroOrMore(comma|r_value|identifier) + rbracket
+        lazy_list = lbracket - ZeroOrMore(comma|r_value|identifier) - rbracket
         lazy_list.set_name("lazy_list")
         # Key value pair definition
         # Ex. replace => { "udm_field" => "value" }, '"udm_field" => "value"' is a key_value_pair
-        key_value_pair = l_value + assign + r_value + Opt(comma)
+        key_value_pair = l_value - assign - r_value - Opt(comma)
+        key_value_pair.set_name("key_value_pair")
         # Hash, a hash is a collection of key value pairs specified in the format "field1" => "value1". Note that multiple key value entries are separated by spaces rather than commas.
-        hash_val = lbrace + OneOrMore(key_value_pair) + rbrace
+        hash_val = lbrace - OneOrMore(key_value_pair) + rbrace
+        hash_val.set_name("hash_val")
         # Config option, used in filter plugins
         # Ex. on_error => "error"
-        config_option = identifier + assign + (string_val|lazy_list|boolean)
+        config_option = identifier - assign - (string_val|lazy_list|boolean)
+        config_option.set_name("config_option")
         # recursive objects to be defined later on
+        if_statement = Forward()
+        if_statement.set_name("if_statement")
+        elif_statement = Forward()
+        elif_statement.set_name("elif_statement")
+        else_statement = Forward()
+        else_statement.set_name("else_statement")
+        for_statement = Forward()
+        for_statement.set_name("for_statement")
+        if_else_chain = Forward()
+        if_else_chain.set_name("if_else_chain")
         statement = Forward()
-        self.one_or_more_blocks = Forward()
+        statement.set_name("statement")
 
         ################
         # Grok grammar #
         ################
         # Grok pattern syntax definition
         # Ex. "message" => [ list of grok patterns ]
-        grok_key_value_pair = string_val + assign + (lazy_list|string_val) + Opt(comma)
+        grok_key_value_pair = string_val - assign - (lazy_list|string_val) - Opt(comma)
+        grok_key_value_pair.set_name("grok_key_value_pair")
         # Match keyword
         match_keyword = Keyword("match")
+        match_keyword.set_name("match_keyword")
         # Match function definition
         # Ex. match => { grok key value pairs } overwrite on_error
-        match = match_keyword + assign + lbrace + OneOrMore(grok_key_value_pair) + rbrace + ZeroOrMore(config_option)
+        match = match_keyword - assign - lbrace - OneOrMore(grok_key_value_pair) - rbrace - ZeroOrMore(config_option)
+        match.set_name("match")
         # Grok keyword
         grok_keyword = Keyword("grok")
+        grok_keyword.set_name("grok_keyword")
         # Overall grok filter definition
         # Ex. grok { match statement }
         grok = grok_keyword + lbrace + match + rbrace
+        grok.set_name("grok")
 
         ##################################
         # Mutate plugin function grammar #
         ##################################
         # Ex. gsub => [ gsub expressions ]
         gsub_exression = string_val + comma + string_val + comma + string_val + Opt(comma)
+        gsub_exression.set_name("gsub_exression")
         gsub_keyword = Keyword("gsub")
-        gsub = gsub_keyword + assign + lbracket + OneOrMore(gsub_exression) + rbracket
+        gsub_keyword.set_name("gsub_keyword")
+        gsub = gsub_keyword + assign + lbracket - OneOrMore(gsub_exression) + rbracket
+        gsub.set_name("gsub")
         # Ex. lowercase => [ list of strings ]
         lowercase_keyword = Keyword("lowercase")
+        lowercase_keyword.set_name("lowercase_keyword")
         lowercase = lowercase_keyword + assign + lazy_list
+        lowercase.set_name("lowercase")
         # Ex. uppercase => [ list of strings ]
         uppercase_keyword = Keyword("uppercase")
+        uppercase_keyword.set_name("uppercase_keyword")
         uppercase = uppercase_keyword + assign + lazy_list
-        # Ex. replace => { key_value_pair }
+        uppercase.set_name("uppercase")
+        # Ex. replace => { [key_value_pair] }
         replace_keyword = Keyword("replace")
+        replace_keyword.set_name("replace_keyword")
         replace = replace_keyword + assign + hash_val
-        # Ex. merge => { key_value_pair }
+        replace.set_name("replace")
+        # Ex. merge => { [key_value_pair] }
         merge_keyword = Keyword("merge")
+        merge_keyword.set_name("merge_keyword")
         merge = merge_keyword + assign + hash_val
-        # Ex. rename => { key_value_pair }
+        merge.set_name("merge")
+        # Ex. rename => { [key_value_pair] }
         rename_keyword = Keyword("rename")
+        rename_keyword.set_name("rename_keyword")
         rename = rename_keyword + assign + hash_val
-        # Ex. convert => { key_value_pair }
+        rename.set_name("rename")
+        # Ex. convert => { [key_value_pair] }
         convert_keyword = Keyword("convert")
+        convert_keyword.set_name("convert_keyword")
         convert = convert_keyword + assign + hash_val
-        # Ex. copy => { key_value_pair }
+        convert.set_name("convert")
+        # Ex. copy => { [key_value_pair] }
         copy_keyword = Keyword("copy")
-        copy = copy_keyword + assign + hash_val
-        # Ex. remove_field => { list of fields }
-        remove_field_keyword = Keyword("remove_field")
-        remove_field = remove_field_keyword + assign + strict_list
-        # Ex. overwrite => { list of fields }
-        overwrite_keyword = Keyword("overwrite")
-        overwrite = overwrite_keyword + assign + strict_list
-        functions = (replace | merge | rename | convert | copy | gsub | lowercase | uppercase | remove_field | overwrite) + ZeroOrMore(config_option)
+        copy_keyword.set_name("copy_keyword")
+        copy = convert_keyword + assign + hash_val
+        copy.set_name("copy")
+        functions = (replace | merge | rename | convert | copy | gsub | lowercase | uppercase) - ZeroOrMore(config_option)
+        functions.set_name("functions")
         # Ex. mutate { [functions] on_error }
         mutate_keyword = Keyword("mutate")
-        mutate = mutate_keyword + lbrace + OneOrMore(functions) + rbrace
+        mutate_keyword.set_name("mutate_keyword")
+        mutate = mutate_keyword + lbrace - OneOrMore(functions) + rbrace
+        mutate.set_name("mutate")
 
         #########################
         # CSV, KV, JSON grammar #
         #########################
         # Ex. json => { options list }
         json_keyword = Keyword("json")
-        json = json_keyword + lbrace + OneOrMore(config_option) + rbrace
+        json_keyword.set_name("json_keyword")
+        json = json_keyword + lbrace - OneOrMore(config_option) + rbrace
+        json.set_name("json")
         # Ex. csv => { options list }
         csv_keyword = Keyword("csv")
-        csv = csv_keyword + lbrace + OneOrMore(config_option) + rbrace
+        csv_keyword.set_name("csv_keyword")
+        csv = csv_keyword + lbrace - OneOrMore(config_option) + rbrace
+        csv.set_name("csv")
         # Ex. kv => { options list }
         kv_keyword = Keyword("kv")
-        kv = kv_keyword + lbrace + OneOrMore(config_option) + rbrace
+        kv_keyword.set_name("kv_keyword")
+        kv = kv_keyword + lbrace - OneOrMore(config_option) + rbrace
+        kv.set_name("kv")
 
         ################
         # Date grammar #
         ################
         # Ex. match => [ list of quoted strings ]
         date_match = match_keyword + assign + lazy_list
+        date_match.set_name("date_match")
         # Ex. date { match statement and options }
         date_keyword = Keyword("date")
-        date = date_keyword + lbrace + date_match + ZeroOrMore(config_option) + rbrace
+        date_keyword.set_name("date_keyword")
+        date = date_keyword + lbrace + date_match - OneOrMore(config_option) + rbrace
+        date.set_name("date")
 
         ################
         # Drop grammar #
         ################
         # Ex. drop { tag => "MALFORMED" }
         drop_keyword = Keyword("drop")
+        drop_keyword.set_name("drop_keyword")
         drop = drop_keyword + lbrace + Opt(config_option) + rbrace
+        drop.set_name("drop")
 
         ################################
         # If/if else statement grammar #
         ################################
         # bracketed identifier in if statement
         if_statement_id = OneOrMore(lbracket + identifier + rbracket)
+        if_statement_id.set_name("if_statement_id")
         # Regex values surrounded by / /
         regex_vals = Combine((Opt('\\') + Literal('/')) + ... + (Opt('\\') + Literal('/')))
-        # binary operators, need a left and right value
-        binary_operator = Keyword('not in') ^ Keyword('in') ^ Keyword('=~') ^ Keyword('!~') ^ Keyword('==') ^ Keyword('!=') ^ Keyword('<=') ^ Keyword('>=') ^ Keyword('<') ^ Keyword('>')
-        math_operator = Literal('+') ^ Literal('-') ^ Literal('*') ^ Literal('/')
-        and_or = Keyword("and") ^ Keyword("or") ^ Keyword('||') ^ Keyword('&&')
-        # Unary operators, only need single value
-        unary_operator = Literal('!') | Keyword("not")
-        unary_operator.set_name("unary operator")
+        regex_vals.set_name("regex_vals")
+        # Math operators
+        math_operator = Literal('+') | Literal('-') | Literal('*') | Literal('/')
+        math_operator.set_name("math_operator")
         # Math equation
-        math_equation = (if_statement_id | num_val) + math_operator + (num_val | if_statement_id)
+        math_equation = if_statement_id + math_operator + (num_val | if_statement_id)
+        math_equation.set_name("math_equation")
         # values can go in an if statement expression
         if_statement_val = string_val | identifier | math_equation | if_statement_id | strict_list | regex_vals
-        # Has a left and right val separated by an binary_operator, can be surrounded by parentheses
-        binary_expression = if_statement_val + binary_operator + if_statement_val
+        if_statement_val.set_name("if_statement_val")
+        # valid evaluators
+        binary_operator = Keyword('not in') | Keyword('in') | Keyword('=~') | Keyword('!~') | Keyword('==') | Keyword('!=') | Keyword('<=') | Keyword('>=') | Keyword('<') | Keyword('>')
+        binary_operator.set_name("binary_operator")
+        # Boolean operators
+        and_or = Keyword("and") | Keyword("or") | Keyword('||') | Keyword('&&')
+        and_or.set_name("and_or")
+        # Evaluation statement, has a left and right val separated by an binary_operator, can be surrounded by parentheses
+        eval_expression = (if_statement_val - binary_operator - if_statement_val) | (lparen + if_statement_id - binary_operator - if_statement_val + lparen)
+        eval_expression.set_name("eval_expression")
+        # Boolean negate literal
+        unary_operator = Literal('!') | Keyword("not")
+        unary_operator.set_name("unary_operator")
         # Boolean statement
         # Ex. ![identifier]
-        unary_expression = Opt(unary_operator) + if_statement_id
-        expression = binary_expression | unary_expression
-        statement <<= expression + Optional(and_or + statement)
-        statement.ignore(Word('()'))
+        bool_expression = Opt(unary_operator) + (if_statement_id | (lparen + if_statement_id + rparen))
+        bool_expression.set_name("bool_expression")
+        expression = eval_expression | bool_expression
+        expression.set_name("expression")
+        statement <<= (expression - ZeroOrMore(and_or - statement)) | ((lparen + expression - ZeroOrMore(and_or - statement) + rparen) - ZeroOrMore(and_or + statement))
         # Ex. if [if_statement_comparisons] and/or [if_statement_comparisons] { [body] }
         if_keyword = Keyword("if")
-        if_statement = if_keyword + statement + original_text_for(nested_expr('{', '}', content=self.one_or_more_blocks, ignore_expr=string_val))
-        # Ex. else if [if_statement_comparisons] [binary_operator] [if_statement_comparisons] { [body] }
+        if_keyword.set_name("if_keyword")
+        if_statement <<= if_keyword - statement - lbrace - OneOrMore(Group(if_else_chain|for_statement|mutate|grok|json|csv|kv|date|drop|copy)) - rbrace
+        # Ex. else if [if_statement_comparisons] [and_or] [if_statement_comparisons] { [body] }
         elif_keyword = Keyword("else if")
-        elif_statement = elif_keyword + statement + original_text_for(nested_expr('{', '}', content=self.one_or_more_blocks, ignore_expr=string_val))
+        elif_keyword.set_name("elif_keyword")
+        elif_statement <<= elif_keyword + statement + lbrace - OneOrMore(Group(if_else_chain|for_statement|mutate|grok|json|csv|kv|date|drop|copy)) + rbrace
         # Ex. else { [body] }
         else_keyword = Keyword("else")
-        else_statement = else_keyword + original_text_for(nested_expr('{', '}', content=self.one_or_more_blocks, ignore_expr=string_val))
+        else_keyword.set_name("else_keyword")
+        else_statement <<= else_keyword + lbrace - OneOrMore(Group(if_else_chain|for_statement|mutate|grok|json|csv|kv|date|drop|copy)) + rbrace
+        if_else_chain <<= Group(if_statement) - ZeroOrMore(Group(elif_statement)) - Opt(Group(else_statement))
 
         #########################
         # For statement grammar #
         #########################
         # in keyword
         in_keyword = Keyword("in")
+        in_keyword.set_name("in_keyword")
         # Ex. for index, value in [identifier] { [body] }
         for_keyword = Keyword("for")
-        for_statement = for_keyword + Opt(identifier + comma) + identifier + in_keyword + (identifier|strict_list) + original_text_for(nested_expr('{', '}', content=self.one_or_more_blocks, ignore_expr=string_val))
+        for_keyword.set_name("for_keyword")
+        for_statement <<= for_keyword - Opt(identifier + comma) + identifier + in_keyword + identifier + lbrace - OneOrMore(Group(if_else_chain|for_statement|mutate|grok|json|csv|kv|date|drop|copy)) + rbrace
+        for_statement.set_name("for_statement")
 
         # filter keyword
         filter_keyword = Keyword("filter")
-
-        #######################################################
-        # Chronicle Logstash context-free language definition #
-        #######################################################
-        # These are valid code blocks to see inside of a nested expression
-        blocks = if_statement | elif_statement | else_statement | for_statement | mutate | grok | json | csv | kv | date | drop | copy
-        blocks.set_name("code blocks")
-        self.one_or_more_blocks <<= OneOrMore(blocks)
-        self.language = StringStart() + filter_keyword + lbrace + self.one_or_more_blocks + rbrace + StringEnd()
-        # Ignore commented statements
-        self.comment = Literal('#') + ... + LineEnd()
-        self.language.ignore(self.comment)
-        self.one_or_more_blocks.ignore(self.comment)
-
-        ##########################
-        # Parse action functions #
-        ##########################
-        @trace_parse_action
-        def nested_expr_parse_action(string, position, token):
-            parsed_data = token.as_list() + recursive_parse_string(token[-1])
-            removed_strings = [entry for entry in parsed_data if type(entry) != str]
-            return [removed_strings]
-
-        def recursive_parse_string(string_to_parse):
-            as_string = self.one_or_more_blocks
-            as_string.ignore(self.comment)
-            as_string.set_debug()
-            list_to_return = []
-            parsed_nested_exp = as_string.parse_string(string_to_parse[1:-1])
-            for parsed_data in parsed_nested_exp:
-                if type(parsed_data) == str:
-                    list_to_return += recursive_parse_string(parsed_data)
-                else:
-                    list_to_return.append(parsed_data)
-            return list_to_return
+        filter_keyword.set_name("filter_keyword")
 
         #####################
         # Set parse actions #
@@ -285,39 +319,17 @@ class Grammar:
         in_keyword.set_parse_action(lambda string,position,token: InToken(position, col(position,string), lineno(position,string)))
         for_keyword.set_parse_action(lambda string,position,token: ForToken(position, col(position,string), lineno(position,string)))
         filter_keyword.set_parse_action(lambda string,position,token: FilterToken(position, col(position,string), lineno(position,string)))
-        if_statement.set_parse_action(nested_expr_parse_action)
-        elif_statement.set_parse_action(nested_expr_parse_action)
-        else_statement.set_parse_action(nested_expr_parse_action)
-        for_statement.set_parse_action(nested_expr_parse_action)
-    
-    def handle_parsing_error(self, file_string, err):
-        patterns = [
-            "^Expected nested {} expression, found end of text  \(at char (\d+)\), \(line:(\d+), col:(\d+)\)$",
-            "^Expected nested {} expression, found '(.*)'  \(at char (\d+)\), \(line:(\d+), col:(\d+)\)$"
-        ]
-        for index, pattern in enumerate(patterns):
-            match = re.match(pattern, str(err))
-            if match and index == 0:
-                position = match.group(1)
-                line_number = match.group(2)
-                col_number = match.group(3)
-                print(err.explain())
-                print("This is likely due to a mismatched curly brace {}")
-                exit(1)
-            elif match and index == 1:
-                print(err.explain())
 
-    def gen_tokens(self, file_path):
-        config = open(file_path)
-        file_string = config.read()
-        try:
-            tokens = self.language.parse_string(file_string)
-            return tokens
-        except exceptions.ParseSyntaxException as oopsie:
-            print(oopsie.explain())
-            # self.handle_parsing_error(file_string, oopsie)
-            
-parser_language = Grammar()
-tokens = parser_language.gen_tokens('/Users/caleb.bryant/Library/CloudStorage/OneDrive-Cyderes/TelEng/github/parser-linting/test/test.conf')
-for token in tokens:
-    print(token)
+        #######################################################
+        # Chronicle Logstash context-free language definition #
+        #######################################################
+        self.grammars = StringStart() + filter_keyword + lbrace - OneOrMore(Group(if_else_chain|for_statement|mutate|grok|json|csv|kv|date|drop|copy)) + rbrace + StringEnd()
+        # Ignore commented statements
+        comment = Literal('#') + ... + LineEnd()
+        self.grammars.ignore(comment)
+
+    def parse_file(self, file_name):
+        return self.grammars.parse_file(file_name)
+
+    def parse_string(self, string):
+        return self.grammars.parse_string(string)
