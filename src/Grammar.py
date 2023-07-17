@@ -72,22 +72,22 @@ class Grammar:
         l_value.set_name("l_value")
         # Strict list definition, used in if/for loop statements, cannot have empty indices
         # Ex. ["1", "2", "3"]
-        strict_list = lbracket - r_value - ZeroOrMore(comma + r_value) - rbracket
+        strict_list = lbracket + r_value - ZeroOrMore(comma + r_value) + rbracket
         strict_list.set_name("strict_list")
         # Lazy list definition, used in filter config options, commas optional and empty indices allowed
         # Ex. ["1" "2", "3", ,]
-        lazy_list = lbracket - ZeroOrMore(comma|r_value|identifier) - rbracket
+        lazy_list = lbracket - ZeroOrMore(comma|r_value|identifier) + rbracket
         lazy_list.set_name("lazy_list")
         # Key value pair definition
         # Ex. replace => { "udm_field" => "value" }, '"udm_field" => "value"' is a key_value_pair
-        key_value_pair = l_value - assign - r_value - Opt(comma)
+        key_value_pair = l_value + assign + r_value + Opt(comma)
         key_value_pair.set_name("key_value_pair")
         # Hash, a hash is a collection of key value pairs specified in the format "field1" => "value1". Note that multiple key value entries are separated by spaces rather than commas.
         hash_val = lbrace - OneOrMore(key_value_pair) + rbrace
         hash_val.set_name("hash_val")
         # Config option, used in filter plugins
         # Ex. on_error => "error"
-        config_option = identifier - assign - (string_val|lazy_list|boolean)
+        config_option = identifier + assign + (string_val|lazy_list|boolean)
         config_option.set_name("config_option")
         # recursive objects to be defined later on
         if_statement = Forward()
@@ -113,7 +113,7 @@ class Grammar:
         match_keyword.set_name("match_keyword")
         # Match function definition
         # Ex. match => { grok key value pairs } overwrite on_error
-        match = match_keyword - assign - lbrace - OneOrMore(grok_key_value_pair) - rbrace - ZeroOrMore(config_option)
+        match = match_keyword + assign + lbrace - OneOrMore(grok_key_value_pair) + rbrace + ZeroOrMore(config_option)
         match.set_name("match")
         # Grok keyword
         grok_keyword = Keyword("grok")
@@ -168,12 +168,22 @@ class Grammar:
         copy_keyword.set_name("copy_keyword")
         copy = copy_keyword + assign + hash_val
         copy.set_name("copy")
-        functions = (replace | merge | rename | convert | copy | gsub | lowercase | uppercase) - ZeroOrMore(config_option)
+        # Ex. remove_field => strict_list 
+        remove_field_keyword = Keyword("remove_field")
+        remove_field_keyword.set_name("remove_field_keyword")
+        remove_field = remove_field_keyword + assign + strict_list
+        remove_field.set_name("copy")
+        # Ex. overwrite => strict_list 
+        overwrite_keyword = Keyword("overwrite")
+        overwrite_keyword.set_name("overwrite_keyword")
+        overwrite = overwrite_keyword + assign + strict_list
+        overwrite.set_name("overwrite")
+        functions = (replace | merge | rename | convert | copy | gsub | lowercase | uppercase | remove_field | overwrite) - ZeroOrMore(config_option)
         functions.set_name("functions")
         # Ex. mutate { [functions] on_error }
         mutate_keyword = Keyword("mutate")
         mutate_keyword.set_name("mutate_keyword")
-        mutate = mutate_keyword + lbrace - OneOrMore(functions) + rbrace
+        mutate = mutate_keyword + lbrace + OneOrMore(functions) + rbrace
         mutate.set_name("mutate")
 
         #########################
@@ -204,7 +214,7 @@ class Grammar:
         # Ex. date { match statement and options }
         date_keyword = Keyword("date")
         date_keyword.set_name("date_keyword")
-        date = date_keyword + lbrace + date_match - OneOrMore(config_option) + rbrace
+        date = date_keyword + lbrace + date_match - ZeroOrMore(config_option) + rbrace
         date.set_name("date")
 
         ################
