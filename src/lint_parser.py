@@ -2,6 +2,7 @@
 # created: 2023/04/02
 
 import argparse
+import Grammar
 from Tokens import createTokens
 
 parser = argparse.ArgumentParser(
@@ -34,4 +35,5 @@ if log_type:
 if only_errors:
     chronicle_command += f' -e'
 
-createTokens(config_file)
+language_grammar = Grammar()
+language_grammar.gen_tokens(config_file)

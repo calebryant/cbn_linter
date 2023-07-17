@@ -4,4 +4,4 @@ class UDM:
 
 class MetadataUDM(UDM):
     def __init__(self):
-        self.value = "meatadata"
+        self.value = "metadata"
