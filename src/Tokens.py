@@ -70,90 +70,136 @@ class NumberToken(Token):
 		super().__init__(position, column, row)
 		self.value = token_value
 
-class GrokMatchToken(Token):
-	def __init__(self, position, column, row):
+class PluginToken(Token):
+	def __init__(self, position, column, row, token_value):
 		super().__init__(position, column, row)
-		self.value = "match"
+		self.valid_plugins = [
+			"base64",
+			"clone",
+			"csv",
+			"date",
+			"drop",
+			"grok",
+			"json",
+			"kv",
+			"mutate",
+			"xml"
+		]
+		if token_value in self.valid_plugins:
+			self.value = token_value
+		else:
+			print(f"WARN: Unknown plugin '{token_value}' used at line:{row} col:{column}")
 
-class GrokToken(Token):
-	def __init__(self, position, column, row):
+class FunctionToken(Token):
+	def __init__(self, position, column, row, token_value):
 		super().__init__(position, column, row)
-		self.value = "grok"
+		self.valid_functions = [
+			"convert",
+			"copy",
+			"gsub",
+			"join",
+			"lowercase",
+			"match",
+			"merge",
+			"coerce",
+			"rename",
+			"replace",
+			"split",
+			"strip",
+			"update",
+			"uppercase",
+			"capitalize",
+			"xpath"
+		]
+		if token_value in self.valid_functions:
+			self.value = token_value
+		else:
+			print(f"WARN: Unknown function '{token_value}' used at line:{row} col:{column}")
 
-class GsubToken(Token):
-	def __init__(self, position, column, row):
-		super().__init__(position, column, row)
-		self.value = "gsub"
+# class GrokMatchToken(Token):
+# 	def __init__(self, position, column, row):
+# 		super().__init__(position, column, row)
+# 		self.value = "match"
 
-class LowercaseToken(Token):
-	def __init__(self, position, column, row):
-		super().__init__(position, column, row)
-		self.value = "lowercase"
+# class GrokToken(Token):
+# 	def __init__(self, position, column, row):
+# 		super().__init__(position, column, row)
+# 		self.value = "grok"
 
-class UppercaseToken(Token):
-	def __init__(self, position, column, row):
-		super().__init__(position, column, row)
-		self.value = "uppercase"
+# class GsubToken(Token):
+# 	def __init__(self, position, column, row):
+# 		super().__init__(position, column, row)
+# 		self.value = "gsub"
 
-class ReplaceToken(Token):
-	def __init__(self, position, column, row):
-		super().__init__(position, column, row)
-		self.value = "replace"
+# class LowercaseToken(Token):
+# 	def __init__(self, position, column, row):
+# 		super().__init__(position, column, row)
+# 		self.value = "lowercase"
 
-class MergeToken(Token):
-	def __init__(self, position, column, row):
-		super().__init__(position, column, row)
-		self.value = "Merge"
+# class UppercaseToken(Token):
+# 	def __init__(self, position, column, row):
+# 		super().__init__(position, column, row)
+# 		self.value = "uppercase"
 
-class RenameToken(Token):
-	def __init__(self, position, column, row):
-		super().__init__(position, column, row)
-		self.value = "rename"
+# class ReplaceToken(Token):
+# 	def __init__(self, position, column, row):
+# 		super().__init__(position, column, row)
+# 		self.value = "replace"
 
-class ConvertToken(Token):
-	def __init__(self, position, column, row):
-		super().__init__(position, column, row)
-		self.value = "convert"
+# class MergeToken(Token):
+# 	def __init__(self, position, column, row):
+# 		super().__init__(position, column, row)
+# 		self.value = "Merge"
 
-class CopyToken(Token):
-	def __init__(self, position, column, row):
-		super().__init__(position, column, row)
-		self.value = "copy"
+# class RenameToken(Token):
+# 	def __init__(self, position, column, row):
+# 		super().__init__(position, column, row)
+# 		self.value = "rename"
 
-class MutateToken(Token):
-	def __init__(self, position, column, row):
-		super().__init__(position, column, row)
-		self.value = "mutate"
+# class ConvertToken(Token):
+# 	def __init__(self, position, column, row):
+# 		super().__init__(position, column, row)
+# 		self.value = "convert"
 
-class JsonToken(Token):
-	def __init__(self, position, column, row):
-		super().__init__(position, column, row)
-		self.value = "json"
+# class CopyToken(Token):
+# 	def __init__(self, position, column, row):
+# 		super().__init__(position, column, row)
+# 		self.value = "copy"
 
-class CsvToken(Token):
-	def __init__(self, position, column, row):
-		super().__init__(position, column, row)
-		self.value = "csv"
+# class MutateToken(Token):
+# 	def __init__(self, position, column, row):
+# 		super().__init__(position, column, row)
+# 		self.value = "mutate"
 
-class KvToken(Token):
-	def __init__(self, position, column, row):
-		super().__init__(position, column, row)
-		self.value = "kv"
+# class JsonToken(Token):
+# 	def __init__(self, position, column, row):
+# 		super().__init__(position, column, row)
+# 		self.value = "json"
 
-class DateMatchToken(Token):
-	def __init__(self, position, column, row):
-		super().__init__(position, column, row)
-		self.value = "match"
+# class CsvToken(Token):
+# 	def __init__(self, position, column, row):
+# 		super().__init__(position, column, row)
+# 		self.value = "csv"
 
-class DateToken(Token):
-	def __init__(self, position, column, row):
-		super().__init__(position, column, row)
-		self.value = "date"
+# class KvToken(Token):
+# 	def __init__(self, position, column, row):
+# 		super().__init__(position, column, row)
+# 		self.value = "kv"
 
-class DropToken(Token):
-	def __init__(self, position, column, row):
-		super().__init__(position, column, row)
-		self.value = "drop"
+# class DateMatchToken(Token):
+# 	def __init__(self, position, column, row):
+# 		super().__init__(position, column, row)
+# 		self.value = "match"
+
+# class DateToken(Token):
+# 	def __init__(self, position, column, row):
+# 		super().__init__(position, column, row)
+# 		self.value = "date"
+
+# class DropToken(Token):
+# 	def __init__(self, position, column, row):
+# 		super().__init__(position, column, row)
+# 		self.value = "drop"
 
 class RegexToken(Token):
 	def __init__(self, position, column, row, value):
