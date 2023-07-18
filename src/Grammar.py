@@ -16,6 +16,38 @@ from pyparsing import (
     col, line, StringStart, StringEnd, Suppress
 )
 
+function_enums = [
+			"base64",
+			"clone",
+			"csv",
+			"date",
+			"drop",
+			"grok",
+			"json",
+			"kv",
+			"mutate",
+			"xml"
+		]
+
+filter_enums = [
+			"convert",
+			"copy",
+			"gsub",
+			"join",
+			"lowercase",
+			"match",
+			"merge",
+			"coerce",
+			"rename",
+			"replace",
+			"split",
+			"strip",
+			"update",
+			"uppercase",
+			"capitalize",
+			"xpath"
+		]
+
 class Grammar:
     def __init__(self):
         #######################################################
@@ -56,7 +88,7 @@ class Grammar:
         num_val.set_name("num_val")
         # Lazy list definition, used in filter config options, commas optional and empty indices allowed
         # Ex. ["1" "2", "3", ,]
-        list_val = lbracket - ZeroOrMore(Suppress(comma) | string_val | num_val | boolean | identifier) + rbracket
+        list_val = lbracket - Group(ZeroOrMore(Suppress(comma) | string_val | num_val | boolean | identifier)) + rbracket
         list_val.set_name("list_val")
         # Values that go on the right side of an expression, 
         # Ex. replace => { "udm_field" => "value" }, "value" is the r_value
@@ -70,11 +102,9 @@ class Grammar:
         # Ex. replace => { "udm_field" => "value" }, '"udm_field" => "value"' is a key_value_pair
         key_value_pair = l_value + assign + r_value + Suppress(Opt(comma))
         key_value_pair.set_name("key_value_pair")
-        key_value_pair.set_results_name("key_value_pair")
         # Hash, a hash is a collection of key value pairs specified in the format "field1" => "value1". Note that multiple key value entries are separated by spaces rather than commas.
         hash_val = lbrace - Group(OneOrMore(key_value_pair)) + rbrace
         hash_val.set_name("hash_val")
-        hash_val.set_results_name("hash_val")
         # Config option, used in filter plugins
         # Ex. on_error => "error"
         # config_option = l_value + assign + (identifier|string_val|list_val|boolean) + Opt(comma)

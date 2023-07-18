@@ -73,48 +73,12 @@ class NumberToken(Token):
 class PluginToken(Token):
 	def __init__(self, position, column, row, token_value):
 		super().__init__(position, column, row)
-		self.valid_plugins = [
-			"base64",
-			"clone",
-			"csv",
-			"date",
-			"drop",
-			"grok",
-			"json",
-			"kv",
-			"mutate",
-			"xml"
-		]
-		if token_value in self.valid_plugins:
-			self.value = token_value
-		else:
-			print(f"WARN: Unknown plugin '{token_value}' used at line:{row} col:{column}")
+		self.value = token_value
 
 class FunctionToken(Token):
 	def __init__(self, position, column, row, token_value):
 		super().__init__(position, column, row)
-		self.valid_functions = [
-			"convert",
-			"copy",
-			"gsub",
-			"join",
-			"lowercase",
-			"match",
-			"merge",
-			"coerce",
-			"rename",
-			"replace",
-			"split",
-			"strip",
-			"update",
-			"uppercase",
-			"capitalize",
-			"xpath"
-		]
-		if token_value in self.valid_functions:
-			self.value = token_value
-		else:
-			print(f"WARN: Unknown function '{token_value}' used at line:{row} col:{column}")
+		self.value = token_value
 
 # class GrokMatchToken(Token):
 # 	def __init__(self, position, column, row):
