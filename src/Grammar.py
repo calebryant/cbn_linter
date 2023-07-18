@@ -70,9 +70,11 @@ class Grammar:
         # Ex. replace => { "udm_field" => "value" }, '"udm_field" => "value"' is a key_value_pair
         key_value_pair = l_value + assign + r_value + Suppress(Opt(comma))
         key_value_pair.set_name("key_value_pair")
+        key_value_pair.set_results_name("key_value_pair")
         # Hash, a hash is a collection of key value pairs specified in the format "field1" => "value1". Note that multiple key value entries are separated by spaces rather than commas.
-        hash_val = lbrace - OneOrMore(key_value_pair) + rbrace
+        hash_val = lbrace - Group(OneOrMore(key_value_pair)) + rbrace
         hash_val.set_name("hash_val")
+        hash_val.set_results_name("hash_val")
         # Config option, used in filter plugins
         # Ex. on_error => "error"
         # config_option = l_value + assign + (identifier|string_val|list_val|boolean) + Opt(comma)
@@ -91,13 +93,13 @@ class Grammar:
         # Function grammar #
         ####################
         function_id = Word(alphanums) | (Suppress(Literal("'")) + Word(alphanums) + Suppress(Literal("'"))) | (Suppress(Literal('"')) + Word(alphanums) + Suppress(Literal('"')))
-        function = function_id + assign + ZeroOrMore(hash_val)
+        function = function_id + assign + hash_val
 
         ##################
         # Plugin grammar #
         ##################
         plugin_id = Word(alphanums) | (Suppress(Literal("'")) + Word(alphanums) + Suppress(Literal("'"))) | (Suppress(Literal('"')) + Word(alphanums) + Suppress(Literal('"')))
-        plugin = plugin_id + lbrace - ZeroOrMore(function ^ key_value_pair) + rbrace
+        plugin = plugin_id + lbrace - ZeroOrMore(Group(function ^ key_value_pair)) + rbrace
 
         code_blocks = Group(if_statement|elif_statement|else_statement|for_statement|plugin)
 
@@ -180,7 +182,7 @@ class Grammar:
         num_val.set_parse_action(lambda string,position,token: NumberToken(position, col(position,string), lineno(position,string), token.as_list()[0]))
         plugin_id.set_parse_action(lambda string,position,token: PluginToken(position, col(position,string), lineno(position,string), token.as_list()[0]))
         function_id.set_parse_action(lambda string,position,token: FunctionToken(position, col(position,string), lineno(position,string), token.as_list()[0]))
-        regex_vals.set_parse_action(lambda string,position,token: RegexToken(position, col(position,string), lineno(position,string), token.as_list()[0]))
+        # regex_vals.set_parse_action(lambda string,position,token: RegexToken(position, col(position,string), lineno(position,string), token.as_list()[0]))
         # math_operator.set_parse_action(lambda string,position,token: MathOpToken(position, col(position,string), lineno(position,string), token.as_list()[0]))
         # binary_operator.set_parse_action(lambda string,position,token: BoolCompareToken(position, col(position,string), lineno(position,string), token.as_list()[0]))
         # and_or.set_parse_action(lambda string,position,token: BoolOpToken(position, col(position,string), lineno(position,string), token.as_list()[0]))

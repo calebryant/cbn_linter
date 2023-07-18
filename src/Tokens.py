@@ -1,7 +1,7 @@
 # Created 2023/07/12
 # Author: Caleb Bryant
 # Title: Tokens.py
-# Description: This file defines a Token class that represent all the valid syntax tokens allowed in a Chronicle parser config file.
+# Description: This file defines a Token class that represent all the valid syntax tokens allowed in a Chronicle parser config file. This allows us to check for syntactical errors easier.
 # References: https://www.geeksforgeeks.org/introduction-of-lexical-analysis/
 
 class Token:
@@ -201,30 +201,30 @@ class FunctionToken(Token):
 # 		super().__init__(position, column, row)
 # 		self.value = "drop"
 
-class RegexToken(Token):
-	def __init__(self, position, column, row, value):
-		super().__init__(position, column, row)
-		self.value = value
+# class RegexToken(Token):
+# 	def __init__(self, position, column, row, value):
+# 		super().__init__(position, column, row)
+# 		self.value = value
 
-class MathOpToken(Token):
-	def __init__(self, position, column, row, value):
-		super().__init__(position, column, row)
-		self.value = value
+# class MathOpToken(Token):
+# 	def __init__(self, position, column, row, value):
+# 		super().__init__(position, column, row)
+# 		self.value = value
 
-class BoolCompareToken(Token):
-	def __init__(self, position, column, row, value):
-		super().__init__(position, column, row)
-		self.value = value
+# class BoolCompareToken(Token):
+# 	def __init__(self, position, column, row, value):
+# 		super().__init__(position, column, row)
+# 		self.value = value
 
-class BoolOpToken(Token):
-	def __init__(self, position, column, row, value):
-		super().__init__(position, column, row)
-		self.value = value
+# class BoolOpToken(Token):
+# 	def __init__(self, position, column, row, value):
+# 		super().__init__(position, column, row)
+# 		self.value = value
 
-class BoolNegateToken(Token):
-	def __init__(self, position, column, row, value):
-		super().__init__(position, column, row)
-		self.value = value
+# class BoolNegateToken(Token):
+# 	def __init__(self, position, column, row, value):
+# 		super().__init__(position, column, row)
+# 		self.value = value
 
 class IfStatementToken(Token):
 	def __init__(self, position, column, row, value):
