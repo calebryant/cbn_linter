@@ -12,9 +12,8 @@ from pyparsing import (
     Word, alphanums, alphas, nums, Combine,
     Opt, QuotedString, ZeroOrMore, Group,
     OneOrMore, Keyword, Literal, Forward, SkipTo,
-    Dict, LineStart, LineEnd, srange, exceptions,
-    Each, lineno, col, line, testing, StringStart,
-    StringEnd, Suppress
+    LineStart, LineEnd, srange, Each, lineno, 
+    col, line, StringStart, StringEnd, Suppress
 )
 
 class Grammar:
