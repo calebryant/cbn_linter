@@ -1,3 +1,8 @@
+# Created 2023/07/14
+# Author: Caleb Bryant
+# Title: Grammar.py
+# Description: Loops through standard, override, and default parsers and attempts to parse them using the language defined in Grammar.py
+
 import os, re
 from Grammar import Grammar
 from pyparsing import exceptions

@@ -16,7 +16,7 @@ from pyparsing import (
     col, line, StringStart, StringEnd, Suppress
 )
 
-function_enums = [
+function_enums = [ # Allowed function keyword values
 			"base64",
 			"clone",
 			"csv",
@@ -29,7 +29,7 @@ function_enums = [
 			"xml"
 		]
 
-filter_enums = [
+filter_enums = [ # Allowed filter keyword values
 			"convert",
 			"copy",
 			"gsub",

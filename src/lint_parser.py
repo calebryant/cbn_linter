@@ -41,8 +41,7 @@ if config_file:
         open_file = open(config_file)
         file_string = open_file.read()
         tokens = grammar.parse_string(file_string)
-        for token in tokens:    
-            print(token)
+        print("Parser contains valid syntax")
     except exceptions.ParseSyntaxException as oopsie:
         match = re.search("found '(.*)'", str(oopsie))
         if match:
