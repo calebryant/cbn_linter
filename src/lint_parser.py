@@ -1,9 +1,10 @@
 # auther: caleb.bryant@cyderes.com
 # created: 2023/04/02
 
-import argparse, re
+import argparse, re, json
 from pyparsing import exceptions
 from Grammar import Grammar
+from AST import AST
 
 parser = argparse.ArgumentParser(
     prog='lint_parser.py',
@@ -42,6 +43,8 @@ if config_file:
         file_string = open_file.read()
         tokens = grammar.parse_string(file_string)
         print("Parser contains valid syntax")
+        ast = AST(tokens)
+        print(ast.to_json(tokens))
     except exceptions.ParseSyntaxException as oopsie:
         match = re.search("found '(.*)'", str(oopsie))
         if match:

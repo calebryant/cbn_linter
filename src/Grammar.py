@@ -16,38 +16,6 @@ from pyparsing import (
     col, line, StringStart, StringEnd, Suppress
 )
 
-function_enums = [ # Allowed function keyword values
-			"base64",
-			"clone",
-			"csv",
-			"date",
-			"drop",
-			"grok",
-			"json",
-			"kv",
-			"mutate",
-			"xml"
-		]
-
-filter_enums = [ # Allowed filter keyword values
-			"convert",
-			"copy",
-			"gsub",
-			"join",
-			"lowercase",
-			"match",
-			"merge",
-			"coerce",
-			"rename",
-			"replace",
-			"split",
-			"strip",
-			"update",
-			"uppercase",
-			"capitalize",
-			"xpath"
-		]
-
 class Grammar:
     def __init__(self):
         #######################################################
@@ -58,8 +26,8 @@ class Grammar:
         # Initial defintions #
         ######################
         # Assignment character
-        assign = Literal('=>') | Literal('=') | Literal(':')
-        assign.set_name('=>')
+        arrow = Literal('=>') | Literal('=') | Literal(':')
+        arrow.set_name('=>')
         # Left brace character
         lbrace = Literal('{')
         # Right brace character
@@ -75,8 +43,8 @@ class Grammar:
         # Comma character
         comma = Literal(',')
         # Variable names, not quoted
-        identifier = Word(srange("[a-zA-Z0-9_.\-@]"))
-        identifier.set_name("identifier")
+        id_val = Word(srange("[a-zA-Z0-9_.\-@]"))
+        id_val.set_name("id_val")
         # Strings surrounded by "" or ''
         string_val = QuotedString('"', escChar='\\') | QuotedString("'", escChar='\\')
         string_val.set_name("string_val")
@@ -88,27 +56,23 @@ class Grammar:
         num_val.set_name("num_val")
         # Lazy list definition, used in filter config options, commas optional and empty indices allowed
         # Ex. ["1" "2", "3", ,]
-        list_val = lbracket - Group(ZeroOrMore(Suppress(comma) | string_val | num_val | boolean | identifier)) + rbracket
+        list_val = lbracket - Group(ZeroOrMore(Suppress(comma) | string_val | num_val | boolean | id_val)) + rbracket
         list_val.set_name("list_val")
         # Values that go on the right side of an expression, 
         # Ex. replace => { "udm_field" => "value" }, "value" is the r_value
-        r_value = string_val | num_val | boolean | identifier | list_val
+        r_value = string_val | num_val | boolean | id_val | list_val
         r_value.set_name("kv_rvalue")
         # Values that go on the left side of an expression, 
         # Ex. replace => { "udm_field" => "value" }, "udm_field" is the l_value
-        l_value = identifier | string_val
+        l_value = id_val | string_val
         l_value.set_name("kv_lvalue")
         # Key value pair definition
         # Ex. replace => { "udm_field" => "value" }, '"udm_field" => "value"' is a key_value_pair
-        key_value_pair = l_value + assign + r_value + Suppress(Opt(comma))
+        key_value_pair = l_value + arrow + r_value + Suppress(Opt(comma))
         key_value_pair.set_name("key_value_pair")
         # Hash, a hash is a collection of key value pairs specified in the format "field1" => "value1". Note that multiple key value entries are separated by spaces rather than commas.
-        hash_val = lbrace - Group(OneOrMore(key_value_pair)) + rbrace
+        hash_val = lbrace - Group(ZeroOrMore(key_value_pair)) - rbrace
         hash_val.set_name("hash_val")
-        # Config option, used in filter plugins
-        # Ex. on_error => "error"
-        # config_option = l_value + assign + (identifier|string_val|list_val|boolean) + Opt(comma)
-        # config_option.set_name("config_option")
         # recursive objects to be defined later on
         if_statement = Forward()
         if_statement.set_name("if_statement")
@@ -119,25 +83,25 @@ class Grammar:
         for_statement = Forward()
         for_statement.set_name("for_statement")
 
-        ####################
-        # Function grammar #
-        ####################
-        function_id = Word(alphanums) | (Suppress(Literal("'")) + Word(alphanums) + Suppress(Literal("'"))) | (Suppress(Literal('"')) + Word(alphanums) + Suppress(Literal('"')))
-        function = function_id + assign + hash_val
+        #########################
+        # Config Option grammar #
+        #########################
+        config_option_id = Word(alphanums) | (Suppress(Literal("'")) + Word(alphanums) + Suppress(Literal("'"))) | (Suppress(Literal('"')) + Word(alphanums) + Suppress(Literal('"')))
+        config_option = config_option_id + arrow - hash_val
 
         ##################
         # Plugin grammar #
         ##################
         plugin_id = Word(alphanums) | (Suppress(Literal("'")) + Word(alphanums) + Suppress(Literal("'"))) | (Suppress(Literal('"')) + Word(alphanums) + Suppress(Literal('"')))
-        plugin = plugin_id + lbrace - ZeroOrMore(Group(function ^ key_value_pair)) + rbrace
+        plugin = plugin_id + lbrace - ZeroOrMore(Group(config_option ^ key_value_pair)) + rbrace
 
         code_blocks = Group(if_statement|elif_statement|else_statement|for_statement|plugin)
 
         ################################
         # If/if else statement grammar #
         ################################
-        # # bracketed identifier in if statement
-        # if_statement_id = OneOrMore(lbracket + identifier + rbracket)
+        # # bracketed id_val in if statement
+        # if_statement_id = OneOrMore(lbracket + id_val + rbracket)
         # if_statement_id.set_name("if_statement_id")
         # # Regex values surrounded by / /
         regex_vals = Combine((Opt('\\') + Literal('/')) + ... + (Opt('\\') + Literal('/')))
@@ -149,7 +113,7 @@ class Grammar:
         # math_equation = if_statement_id + math_operator + (num_val | if_statement_id)
         # math_equation.set_name("math_equation")
         # # values can go in an if statement expression
-        # if_statement_val = string_val | identifier | math_equation | if_statement_id | list_val | regex_vals
+        # if_statement_val = string_val | id_val | math_equation | if_statement_id | list_val | regex_vals
         # if_statement_val.set_name("if_statement_val")
         # # valid evaluators
         # binary_operator = Keyword('not in') | Keyword('in') | Keyword('=~') | Keyword('!~') | Keyword('==') | Keyword('!=') | Keyword('<=') | Keyword('>=') | Keyword('<') | Keyword('>')
@@ -164,7 +128,7 @@ class Grammar:
         # unary_operator = Literal('!') | Keyword("not")
         # unary_operator.set_name("unary_operator")
         # # Boolean statement
-        # # Ex. ![identifier]
+        # # Ex. ![id_val]
         # bool_expression = (unary_operator + eval_expression) | (Opt(unary_operator) + if_statement_id)
         # bool_expression.set_name("bool_expression")
         # expression = eval_expression | bool_expression
@@ -186,9 +150,9 @@ class Grammar:
         #########################
         # in keyword
         in_keyword = Keyword("in")
-        # Ex. for index, value in [identifier] { [body] }
+        # Ex. for index, value in [id_val] { [body] }
         for_keyword = Keyword("for")
-        for_statement <<= for_keyword - Opt(identifier + comma) + identifier + in_keyword + (identifier|list_val) + lbrace - ZeroOrMore(code_blocks) + rbrace
+        for_statement <<= for_keyword - Opt(id_val + comma) + id_val + in_keyword + (id_val|list_val) + lbrace - ZeroOrMore(code_blocks) + rbrace
 
         # filter keyword
         filter_keyword = Keyword("filter")
@@ -198,7 +162,7 @@ class Grammar:
         # Set parse actions #
         #####################
         # Creates a token for each match
-        assign.set_parse_action(lambda string,position,token: AssignToken(position, col(position,string), lineno(position,string), token.as_list()[0]))
+        arrow.set_parse_action(lambda string,position,token: AssignToken(position, col(position,string), lineno(position,string), token.as_list()[0]))
         lbrace.set_parse_action(lambda string,position,token: LBraceToken(position, col(position,string), lineno(position,string)))
         rbrace.set_parse_action(lambda string,position,token: RBraceToken(position, col(position,string), lineno(position,string)))
         lbracket.set_parse_action(lambda string,position,token: LBracketToken(position, col(position,string), lineno(position,string)))
@@ -206,12 +170,12 @@ class Grammar:
         lparen.set_parse_action(lambda string,position,token: LParenToken(position, col(position,string), lineno(position,string)))
         rparen.set_parse_action(lambda string,position,token: RParenToken(position, col(position,string), lineno(position,string)))
         comma.set_parse_action(lambda string,position,token: CommaToken(position, col(position,string), lineno(position,string)))
-        identifier.set_parse_action(lambda string,position,token: IDToken(position, col(position,string), lineno(position,string), token.as_list()[0]))
+        id_val.set_parse_action(lambda string,position,token: IDToken(position, col(position,string), lineno(position,string), token.as_list()[0]))
         string_val.set_parse_action(lambda string,position,token: StringToken(position, col(position,string), lineno(position,string), token.as_list()[0]))
         boolean.set_parse_action(lambda string,position,token: BoolToken(position, col(position,string), lineno(position,string), token.as_list()[0]))
         num_val.set_parse_action(lambda string,position,token: NumberToken(position, col(position,string), lineno(position,string), token.as_list()[0]))
         plugin_id.set_parse_action(lambda string,position,token: PluginToken(position, col(position,string), lineno(position,string), token.as_list()[0]))
-        function_id.set_parse_action(lambda string,position,token: FunctionToken(position, col(position,string), lineno(position,string), token.as_list()[0]))
+        config_option_id.set_parse_action(lambda string,position,token: ConfigOptionToken(position, col(position,string), lineno(position,string), token.as_list()[0]))
         # regex_vals.set_parse_action(lambda string,position,token: RegexToken(position, col(position,string), lineno(position,string), token.as_list()[0]))
         # math_operator.set_parse_action(lambda string,position,token: MathOpToken(position, col(position,string), lineno(position,string), token.as_list()[0]))
         # binary_operator.set_parse_action(lambda string,position,token: BoolCompareToken(position, col(position,string), lineno(position,string), token.as_list()[0]))
@@ -225,9 +189,9 @@ class Grammar:
         for_keyword.set_parse_action(lambda string,position,token: ForToken(position, col(position,string), lineno(position,string)))
         filter_keyword.set_parse_action(lambda string,position,token: FilterToken(position, col(position,string), lineno(position,string)))
 
-        #######################################################
-        # Chronicle Logstash context-free language definition #
-        #######################################################
+        ##########################################
+        # Chronicle Logstash language definition #
+        ##########################################
         self.grammars = StringStart() + filter_keyword + lbrace - OneOrMore(code_blocks) + rbrace + StringEnd()
         # Ignore commented statements
         comment = Literal('#') + ... + LineEnd()

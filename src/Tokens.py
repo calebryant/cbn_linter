@@ -75,7 +75,7 @@ class PluginToken(Token):
 		super().__init__(position, column, row)
 		self.value = token_value
 
-class FunctionToken(Token):
+class ConfigOptionToken(Token):
 	def __init__(self, position, column, row, token_value):
 		super().__init__(position, column, row)
 		self.value = token_value
