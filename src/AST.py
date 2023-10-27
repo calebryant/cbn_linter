@@ -5,61 +5,72 @@
 # References: https://en.wikipedia.org/wiki/Abstract_syntax_tree
 
 from Tokens import *
-from Grammar import function_enums, filter_enums
+from Grammar import Grammar
 
 class AST:
     def __init__(self, tokens):
-        self.kind = tokens[0]
-        self.start = tokens[1]
-        self.end = tokens[-1]
-        self.branches = []
+        self.tokens = tokens
 
-class Function(AST):
-    def __init__(self, tokens):
-        for token_list in tokens:
-            self.kind = token_list[0]
-            if type(self.kind) == FunctionToken:
-                self.assign = tokens[1]
-                self.start = tokens[2]
-                self.end = tokens[-1]
-                self.branches.append(build_tree(tokens[3:-1]))
-            if type(self.kind) == StringToken:
+    def recurse_ast(self, tokens):
+        for token in tokens:
+            if type(token) == list:
+                self.recurse_ast(token)
+            elif type(token) == PluginToken:
+                if token.value == "grok":
+                    # do stuff
+                elif token.value == "json":
+                    # do stuff
+                elif token.value == "xml":
+                    # do stuff
+                elif token.value == "kv":
+                    # do stuff
+                elif token.value == "csv":
+                    # do stuff
+                elif token.value == "mutate":
+                    # do stuff
+                elif token.value == "base64":
+                    # do stuff
+                elif token.value == "date":
+                    # do stuff
+                elif token.value == "drop":
+                    # do stuff
+                elif token.value == "statedump":
+                    # do stuff
+                else:
+                    raise ValueError
+            elif type(token) == ConfigOptionToken:
+                if token.value == "convert":
+                    # do stuff
+                elif token.value == "gsub":
+                    # do stuff
+                elif token.value == "lowercase":
+                    # do stuff
+                elif token.value == "merge":
+                    # do stuff
+                elif token.value == "rename":
+                    # do stuff
+                elif token.value == "replace":
+                    # do stuff
+                elif token.value == "uppercase":
+                    # do stuff
+                elif token.value == "remove_field":
+                    # do stuff
+                elif token.value == "copy":
+                    # do stuff
+                elif token.value == "split":
+                    # do stuff
+                else:
+                    raise ValueError
 
-            if type(self.kind) == IDToken:
+    def check_ast(self):
+        results = self.recurse_ast(self.tokens)
 
-    def build_tree(self, tokens):
-        return_value = []
-
-
-class Plugin(AST):
-    def __init__(self, tokens):
-        super().__init__(tokens)
-        self.branches.append(build_tree(tokens[2:-1]))
-
-    def build_tree(self, tokens):
-        return_value = []
-        for token_list in tokens:
-            if type(token_list[0]) == FunctionToken:
-                return_value.append(Function(tokens))
-
-class Filter(AST):
-    def __init__(self, tokens):
-        super().__init__(tokens)
-        self.branches = build_tree(tokens[2:-1])
-    
-    def build_tree(self, tokens):
-        return_value = []
-        for token_list in tokens:
-            # At this level, there are 5 types of tokens we can expect to see: plugin, if, elif, else, for
-            if type(token_list[0]) == PluginToken:
-                return_value.append(Plugin(token_list))
-            elif type(token_list[0]) == IfToken:
-            
-            elif type(token_list[0]) == ElseIfToken:
-
-            elif type(token_list[0]) == ElseToken:
-            
-            elif type(token_list[0]) == ForToken:
-
+    def to_json(self, tokens):
+        output = []
+        for token in tokens:
+            if type(token) == list:
+                l = self.to_json(token)
+                output.append(l)
             else:
-                print(f"Invalid token: {token_list[0]}")
+                output.append(token.value)
+        return output

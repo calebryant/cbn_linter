@@ -68,7 +68,7 @@ class Grammar:
         l_value.set_name("kv_lvalue")
         # Key value pair definition
         # Ex. replace => { "udm_field" => "value" }, '"udm_field" => "value"' is a key_value_pair
-        key_value_pair = l_value + arrow + r_value + Suppress(Opt(comma))
+        key_value_pair = Group(l_value + arrow + r_value + Suppress(Opt(comma)))
         key_value_pair.set_name("key_value_pair")
         # Hash, a hash is a collection of key value pairs specified in the format "field1" => "value1". Note that multiple key value entries are separated by spaces rather than commas.
         hash_val = lbrace - Group(ZeroOrMore(key_value_pair)) - rbrace
@@ -93,7 +93,7 @@ class Grammar:
         # Plugin grammar #
         ##################
         plugin_id = Word(alphanums) | (Suppress(Literal("'")) + Word(alphanums) + Suppress(Literal("'"))) | (Suppress(Literal('"')) + Word(alphanums) + Suppress(Literal('"')))
-        plugin = plugin_id + lbrace - ZeroOrMore(Group(config_option ^ key_value_pair)) + rbrace
+        plugin = plugin_id + lbrace - ZeroOrMore(Group(config_option) ^ key_value_pair) + rbrace
 
         code_blocks = Group(if_statement|elif_statement|else_statement|for_statement|plugin)
 
@@ -198,7 +198,7 @@ class Grammar:
         self.grammars.ignore(comment)
 
     def parse_file(self, file_name):
-        return self.grammars.parse_file(file_name)
+        return self.grammars.parse_file(file_name).as_list()
 
     def parse_string(self, string):
-        return self.grammars.parse_string(string)
+        return self.grammars.parse_string(string).as_list()
