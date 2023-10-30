@@ -9,61 +9,7 @@ from Grammar import Grammar
 
 class AST:
     def __init__(self, tokens):
-        self.tokens = tokens
-
-    def recurse_ast(self, tokens):
-        for token in tokens:
-            if type(token) == list:
-                self.recurse_ast(token)
-            elif type(token) == PluginToken:
-                if token.value == "grok":
-                    # do stuff
-                elif token.value == "json":
-                    # do stuff
-                elif token.value == "xml":
-                    # do stuff
-                elif token.value == "kv":
-                    # do stuff
-                elif token.value == "csv":
-                    # do stuff
-                elif token.value == "mutate":
-                    # do stuff
-                elif token.value == "base64":
-                    # do stuff
-                elif token.value == "date":
-                    # do stuff
-                elif token.value == "drop":
-                    # do stuff
-                elif token.value == "statedump":
-                    # do stuff
-                else:
-                    raise ValueError
-            elif type(token) == ConfigOptionToken:
-                if token.value == "convert":
-                    # do stuff
-                elif token.value == "gsub":
-                    # do stuff
-                elif token.value == "lowercase":
-                    # do stuff
-                elif token.value == "merge":
-                    # do stuff
-                elif token.value == "rename":
-                    # do stuff
-                elif token.value == "replace":
-                    # do stuff
-                elif token.value == "uppercase":
-                    # do stuff
-                elif token.value == "remove_field":
-                    # do stuff
-                elif token.value == "copy":
-                    # do stuff
-                elif token.value == "split":
-                    # do stuff
-                else:
-                    raise ValueError
-
-    def check_ast(self):
-        results = self.recurse_ast(self.tokens)
+        self.build_ast(tokens)
 
     def to_json(self, tokens):
         output = []
@@ -74,3 +20,139 @@ class AST:
             else:
                 output.append(token.value)
         return output
+
+class Filter: 
+    def __init__(self, keyword, begin, body, end):
+        self.keyword = keyword
+        self.begin = begin
+        self.body = body
+        self.end = end
+
+class If:
+    def __init__(self, keyword, statement, begin, body, end):
+        self.keyword = keyword
+        self.statement = statement
+        self.begin = begin
+        self.body = body
+        self.end = end
+
+class ElseIf:
+    def __init__(self, keyword, statement, begin, body, end):
+        self.keyword = keyword
+        self.statement = statement
+        self.begin = begin
+        self.body = body
+        self.end = end
+
+class Else:
+    def __init__(self, keyword, begin, body, end):
+        self.keyword = keyword
+        self.begin = begin
+        self.body = body
+        self.end = end
+
+class For:
+    def __init__(self, keyword, statement, begin, body, end):
+        self.keyword = keyword
+        self.statement = statement
+        self.begin = begin
+        self.body = body
+        self.end = end
+
+class Function:
+    def __init__(self, keyword, begin, config, end):
+        self.keyword = keyword
+        self.begin = begin
+        self.end = end
+        config_as_strings = val.value for val in config
+        for key in self.config:
+            if key in body
+
+    def get_name(self):
+        return self.keyword.value
+
+class Grok(Function):
+    def __init__(self, keyword, begin, config, end):
+        super().__init__(keyword, begin, config, end)
+        self.config = {
+            "match": None,
+            "overwrite": None,
+            "on_error": None
+        }
+
+class Json(Function):
+    def __init__(self, keyword, begin, config, end):
+        super().__init__(keyword, begin, config, end)
+        self.config = {
+            "source" : None,
+            "target" : None,
+            "array_function" : None,
+            "on_error" : None
+        }
+
+class Xml(Function):
+    def __init__(self, keyword, begin, config, end):
+        super().__init__(keyword, begin, config, end)
+        self.config = {
+            "source" : None,
+            "target" : None,
+            "xpath" : None,
+            "on_error" : None
+        }
+
+class Kv(Function):
+    def __init__(self, keyword, begin, config, end):
+        super().__init__(keyword, begin, config, end)
+        self.config = {
+            "source" : None,
+            "target" : None,
+            "field_split" : None,
+            "value_split" : None,
+            "whitespace" : None,
+            "trim_value" : None,
+            "on_error" : None
+        }
+
+class Csv(Function):
+    def __init__(self, keyword, begin, config, end):
+        super().__init__(keyword, begin, config, end)
+        self.config = {
+            "source" : None,
+            "target" : None,
+            "separator" : None,
+            "on_error" : None
+        }
+
+class Mutate(Function):
+    def __init__(self, keyword, begin, config, end):
+        super().__init__(keyword, begin, config, end)
+        self.config = {
+            "convert" : None,
+            "gsub" : None,
+            "lowercase" : None,
+            "merge" : None,
+            "rename" : None,
+            "replace" : None,
+            "uppercase" : None,
+            "remove_field" : None,
+            "copy" : None,
+            "split" : None,
+            "on_error" : None
+        }
+
+class Base64(Function):
+    def __init__(self, keyword, begin, config, end):
+        super().__init__(keyword, begin, config, end)
+
+class Date(Function):
+    def __init__(self, keyword, begin, config, end):
+        super().__init__(keyword, begin, config, end)
+
+class Drop(Function):
+    def __init__(self, keyword, begin, config, end):
+        super().__init__(keyword, begin, config, end)
+
+class Statedump(Function):
+    def __init__(self, keyword, begin, config, end):
+        super().__init__(keyword, begin, config, end)
+        
