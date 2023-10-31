@@ -27,8 +27,10 @@ for path, folders, filenames in standard_parsers_folders:
                 failures[f"{path}/{name}"] = str(oopsie)
             except exceptions.ParseException as oopsie:
                 failures[f"{path}/{name}"] = str(oopsie)
-
-
+f = open("standard_failures.json", "w")
+json.dump(failures, f)
+f.close()
+failures = {}
 for path, folders, filenames in override_parsers_folders:
     if path[-5:] == '/conf':
         for name in filenames:
@@ -39,7 +41,10 @@ for path, folders, filenames in override_parsers_folders:
                 failures[f"{path}/{name}"] = str(oopsie)
             except exceptions.ParseException as oopsie:
                 failures[f"{path}/{name}"] = str(oopsie)
-
+f = open("overrides_failures.json", "w")
+json.dump(failures, f)
+f.close()
+failures = {}
 for path, folders, filenames in default_parsers_folders:
     if len(folders) == 0:
         for name in filenames:
@@ -62,9 +67,9 @@ for path, folders, filenames in default_parsers_folders:
                         failures[f"{path}/{name}"] = str(oopsie)
                     except exceptions.ParseException as oopsie:
                         failures[f"{path}/{name}"] = str(oopsie)
-
-output = open('failures.json','w')
-json.dump(failures, output)
+f = open("default_failures.json", "w")
+json.dump(failures, f)
+f.close()
 
 # except exceptions.ParseSyntaxException as oopsie:
 #     match = re.search("found '(.*)'", str(oopsie))
