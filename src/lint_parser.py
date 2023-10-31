@@ -25,7 +25,7 @@ if config_file:
         open_file = open(config_file)
         file_string = open_file.read()
         tokens = grammar.parse_string(file_string)
-        ast = AST(tokens)
+        # ast = AST(tokens)
     except exceptions.ParseSyntaxException as oopsie:
         match = re.search("found '(.*)'", str(oopsie))
         if match:
@@ -36,9 +36,8 @@ if config_file:
         line_num = oopsie.lineno
         col_num = oopsie.col
         print(oopsie.explain())
-        print(f"ParseSyntaxException: Found unexpected token '{found}' at (line:{line_num}, col:{col_num}), char: {char_num}")
-        print(oopsie.line)
-        print(" " * (oopsie.column - 1) + "^")
+        # print(oopsie.line)
+        # print(" " * (oopsie.column - 1) + "^")
         exit(1)
     if json:
         json_tokens = ast.to_json(tokens)
