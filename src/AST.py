@@ -71,6 +71,7 @@ class For(Block):
 class LoopStatement:
     def __init__(self, tokens):
         self.statement = tokens
+    # TODO: add functions to pull out token values to check against value table
 
 class Function:
     def __init__(self, config):
@@ -80,6 +81,11 @@ class Function:
             "config": config[2:-1],
             "end": config[-1]
         }
+
+    # TODO: check config["config"] for valid keywords and values depending on the function type
+    # Ex. Make sure a grok only has one of each of match, overwrite, and on_error
+
+    # TODO: add logic that will add tokens in state data to a value table
 
     def get_name(self):
         return self.config["keyword"].value
@@ -92,6 +98,8 @@ class FunctionConfig:
             "value": config[2],
             "comma": config[-1] if type(config[-1]) == CommaToken else None
         }
+
+    # TODO: Check keywords contain the correct data type. Ex. make sure overwrite contains a list, etc...
 
 class Hash:
     def __init__(self, config):
