@@ -12,9 +12,10 @@ class AST:
         self.value_table = dict()
 
     def to_json(self):
+        # TODO: write a function that can translate a parser into a JSON representation
         return
 
-class Block: 
+class Block:
     def __init__(self, config):
         if type(config[1]) == LBraceToken:
             self.config = {
