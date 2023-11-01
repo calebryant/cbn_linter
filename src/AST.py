@@ -5,15 +5,20 @@
 # References: https://en.wikipedia.org/wiki/Abstract_syntax_tree
 
 from Tokens import *
+from ConfigState import ConfigState
 
 class AST:
     def __init__(self, filter_object):
-        self.filter = filter_object
-        self.value_table = dict() # TODO: find a way to keep track of state data values, is a dictionary the best way? Or maybe a custom object
+        self.filter = filter_object[0]
+        self.value_table = ConfigState()
+        self.scan_tree()
 
-    def to_json(self):
-        # TODO: write a function that can translate a parser into a JSON representation
-        return
+    def scan_tree(self):
+        self.filter.configure_state(self.value_table)
+
+    # def to_json(self):
+    #     # TODO: write a function that can translate a parser into a JSON representation
+    #     return
 
 class Block:
     def __init__(self, config):
@@ -33,6 +38,10 @@ class Block:
                 "body": config[3:-1],
                 "end": config[-1]
             }
+
+    def configure_state(self, config_state):
+        for value in self.config["body"]:
+            value.configure_state(config_state)
 
 class Filter(Block):
     def __init__(self, config):
@@ -91,6 +100,10 @@ class Function:
     def get_name(self):
         return self.config["keyword"].value
 
+    def configure_state(self, config_state):
+        for line in self.config["config"]:
+            line.configure_state(config_state, self.config["keyword"].value)
+
 class FunctionConfig:
     def __init__(self, config):
         self.config = {
@@ -99,8 +112,16 @@ class FunctionConfig:
             "value": config[2],
             "comma": config[-1] if type(config[-1]) == CommaToken else None
         }
+            
+        # TODO: Check keywords contain the correct data type. Ex. make sure overwrite contains a list, etc...
 
-    # TODO: Check keywords contain the correct data type. Ex. make sure overwrite contains a list, etc...
+    def configure_state(self, config_state, function):
+        if self.config["keyword"].value == 'replace':
+            self.config["value"].configure_state('replace')
+        if self.config["keyword"].value == 'on_error':
+            config_state.add_value(self.config["value"])
+        if self.config["keyword"].value == 'target':
+            config_state.add_value(self.config["value"])
 
 class Hash:
     def __init__(self, config):
@@ -109,6 +130,10 @@ class Hash:
             "pairs": config[1:-1],
             "end": config[-1]
         }
+
+    def configure_state(self, config_state, func_type):
+        for pair in pairs:
+            pair.configure_state(config_state, func_type)
 
 class List:
     def __init__(self, config):
@@ -126,6 +151,21 @@ class KeyValue:
             "r_val": config[2],
             "comma": config[-1] if type(config[-1]) == CommaToken else None
         }
+    
+    def configure_state(self, config_state, func_type):
+        if func_type == "rename":
+            pair = self.config
+            config_state.add_value(pair["r_val"])
+            config_state.remove_value(pair["l_val"])
+
+        if func_type == "on_error":
+            pair = self.config
+            config_state.add_value(pair["r_val"])
+
+        if func_type == "target":
+            pair = self.config
+            config_state.add_value(pair["r_val"])
+
 
 # class Grok(Function):
 #     def __init__(self, keyword, begin, config, end):

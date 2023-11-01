@@ -244,10 +244,10 @@ class Grammar:
         self.grammars.ignore(comment_token) # may not want to ignore comments if we want to be able to re-write the parser after taking it in
 
     def parse_file(self, file_name):
-        return self.grammars.parse_file(file_name).as_list()
+        return self.grammars.parse_file(file_name).as_list()[0]
 
     def parse_string(self, string):
-        return self.grammars.parse_string(string).as_list()
+        return self.grammars.parse_string(string).as_list()[0]
 
     def test(self):
         return self.grammars.parse_file("/Users/caleb.bryant/Library/CloudStorage/OneDrive-Cyderes/TelEng/test.conf").as_list()[0]
