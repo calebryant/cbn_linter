@@ -9,7 +9,7 @@ from Tokens import *
 class AST:
     def __init__(self, filter_object):
         self.filter = filter_object
-        self.value_table = dict()
+        self.value_table = dict() # TODO: find a way to keep track of state data values, is a dictionary the best way? Or maybe a custom object
 
     def to_json(self):
         # TODO: write a function that can translate a parser into a JSON representation
