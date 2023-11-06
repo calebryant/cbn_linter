@@ -301,18 +301,11 @@ class Hash:
         self.pairs = config[1:-1]
         self.end = config[-1]
 
-    def build_state(self, state, func_type):
-        for pair in self.pairs:
-            pair.build_state(state, func_type)
-
 class List:
     def __init__(self, config):
         self.begin = config[0]
         self.values = config[1:-1]
         self.end = config[-1]
-
-    # def build_state(self, config, func_type):
-
 
 class KeyValue:
     def __init__(self, config):
@@ -320,17 +313,3 @@ class KeyValue:
         self.assign = config[1]
         self.right_value = config[2]
         self.comma = config[-1] if type(config[-1]) == CommaToken else None
-    
-    def build_state(self, state, func_type):
-        if func_type == "rename":
-            pair = self.config
-            state.add_value(pair["r_val"])
-            state.remove_value(pair["l_val"])
-
-        if func_type == "on_error":
-            pair = self.config
-            state.add_value(pair["r_val"])
-
-        if func_type == "target":
-            pair = self.config
-            state.add_value(pair["r_val"])
