@@ -44,7 +44,12 @@ class State:
 
         return None
 
+    # TODO define check functions for every type of logstash function
     def check_grok(self, grok):
+        # Go through the Grok config
+        match = grok.config["match"]
+        overwrite = grok.config["overwrite"]
+        on_error = grok.config["on_error"]
         return None
     def check_json(self, json):
         return None
@@ -64,11 +69,9 @@ class State:
         return None
     def check_statedump(self, statedump):
         return None
+    
     def check_value(self, value):
         return None
-
-    # TODO define check functions for every type of logstash function
-
     def add_value(self,token):
         self.values_used.append(token.value)
         try:
