@@ -68,9 +68,39 @@ class Grammar:
         filter_token.set_name("filter")
         filter_token.set_parse_action(lambda string,position,token: FilterToken(position, col(position,string), lineno(position,string), token.as_list()[0]))
         # Function keyword tokens
-        function_token = Keyword("grok") | Keyword("json") | Keyword("xml") | Keyword("kv") | Keyword("csv") | Keyword("mutate") | Keyword("base64") | Keyword("date") | Keyword("drop") | Keyword("statedump")
-        function_token.set_name("function keyword")
-        function_token.set_parse_action(lambda string,position,token: FunctionToken(position, col(position,string), lineno(position,string), token.as_list()[0]))
+        # function_token = Keyword("grok") | Keyword("json") | Keyword("xml") | Keyword("kv") | Keyword("csv") | Keyword("mutate") | Keyword("base64") | Keyword("date") | Keyword("drop") | Keyword("statedump")
+        # function_token.set_name("function keyword")
+        # function_token.set_parse_action(lambda string,position,token: FunctionToken(position, col(position,string), lineno(position,string), token.as_list()[0]))
+        # grok keyword token
+        grok_token = Keyword("grok")
+        grok_token.set_parse_action(lambda string,position,token: GrokToken(position, col(position,string), lineno(position,string), token.as_list()[0]))
+        # json keyword token
+        json_token = Keyword("json")
+        json_token.set_parse_action(lambda string,position,token: JsonToken(position, col(position,string), lineno(position,string), token.as_list()[0]))
+        # xml keyword token
+        xml_token = Keyword("xml")
+        xml_token.set_parse_action(lambda string,position,token: XmlToken(position, col(position,string), lineno(position,string), token.as_list()[0]))
+        # kv keyword token
+        kv_token = Keyword("kv")
+        kv_token.set_parse_action(lambda string,position,token: KvToken(position, col(position,string), lineno(position,string), token.as_list()[0]))
+        # csv keyword token
+        csv_token = Keyword("csv")
+        csv_token.set_parse_action(lambda string,position,token: CsvToken(position, col(position,string), lineno(position,string), token.as_list()[0]))
+        # mutate keyword token
+        mutate_token = Keyword("mutate")
+        mutate_token.set_parse_action(lambda string,position,token: MutateToken(position, col(position,string), lineno(position,string), token.as_list()[0]))
+        # base64 keyword token
+        base64_token = Keyword("base64")
+        base64_token.set_parse_action(lambda string,position,token: Base64Token(position, col(position,string), lineno(position,string), token.as_list()[0]))
+        # date keyword token
+        date_token = Keyword("date")
+        date_token.set_parse_action(lambda string,position,token: DateToken(position, col(position,string), lineno(position,string), token.as_list()[0]))
+        # drop keyword token
+        drop_token = Keyword("drop")
+        drop_token.set_parse_action(lambda string,position,token: DropToken(position, col(position,string), lineno(position,string), token.as_list()[0]))
+        # statedump keyword token
+        statedump_token = Keyword("statedump")
+        statedump_token.set_parse_action(lambda string,position,token: StatedumpToken(position, col(position,string), lineno(position,string), token.as_list()[0]))
 
         # Function config tokens
         function_config_token = Keyword("match") | Keyword("overwrite") | Keyword("on_error") | Keyword("source") | Keyword("target") | Keyword("array_function") | Keyword("xpath") | Keyword("field_split") | Keyword("unescape_field_split") | Keyword("value_split") | Keyword("unescape_value_split") | Keyword("whitespace") | Keyword("trim_key") | Keyword("trim_value") | Keyword("separator") | Keyword("unescape_separator") | Keyword("convert") | Keyword("gsub") | Keyword("lowercase") | Keyword("merge") | Keyword("rename") | Keyword("replace") | Keyword("uppercase") | Keyword("remove_field") | Keyword("copy") | Keyword("split") | Keyword("encoding") | Keyword("timezone") | Keyword("rebase") | Keyword("tag") | Keyword("label")
@@ -198,10 +228,38 @@ class Grammar:
         # Function config option definition, ex. overwrite => [ "message", "day", "time" ]
         function_config = function_config_token + arrow_token + (list_value | hash_value | boolean_token | string_token | token_token)
         function_config.set_parse_action(lambda token: FunctionConfig(token.as_list()))
-        # Function definition, ex. json { ... }
-        function = function_token + lbrace_token - ZeroOrMore(function_config + Optional(comma_token)) + rbrace_token
-        function.set_parse_action(lambda token: Function(token.as_list()))
-        # Conditional statement pattern definition
+        # grok pattern definition
+        grok_function = grok_token + lbrace_token - ZeroOrMore(function_config + Optional(comma_token)) + rbrace_token
+        grok_function.set_parse_action(lambda token: Grok(token.as_list()))
+        # json pattern definition
+        json_function = json_token + lbrace_token - ZeroOrMore(function_config + Optional(comma_token)) + rbrace_token
+        json_function.set_parse_action(lambda token: Json(token.as_list()))
+        # xml pattern definition
+        xml_function = xml_token + lbrace_token - ZeroOrMore(function_config + Optional(comma_token)) + rbrace_token
+        xml_function.set_parse_action(lambda token: Xml(token.as_list()))
+        # kv pattern definition
+        kv_function = kv_token + lbrace_token - ZeroOrMore(function_config + Optional(comma_token)) + rbrace_token
+        kv_function.set_parse_action(lambda token: Kv(token.as_list()))
+        # csv pattern definition
+        csv_function = csv_token + lbrace_token - ZeroOrMore(function_config + Optional(comma_token)) + rbrace_token
+        csv_function.set_parse_action(lambda token: Csv(token.as_list()))
+        # mutate pattern definition
+        mutate_function = mutate_token + lbrace_token - ZeroOrMore(function_config + Optional(comma_token)) + rbrace_token
+        mutate_function.set_parse_action(lambda token: Mutate(token.as_list()))
+        # base64 pattern definition
+        base64_function = base64_token + lbrace_token - ZeroOrMore(function_config + Optional(comma_token)) + rbrace_token
+        base64_function.set_parse_action(lambda token: Base64(token.as_list()))
+        # date pattern definition
+        date_function = date_token + lbrace_token - ZeroOrMore(function_config + Optional(comma_token)) + rbrace_token
+        date_function.set_parse_action(lambda token: Date(token.as_list()))
+        # drop pattern definition
+        drop_function = drop_token + lbrace_token - ZeroOrMore(function_config + Optional(comma_token)) + rbrace_token
+        drop_function.set_parse_action(lambda token: Drop(token.as_list()))
+        # statedump pattern definition
+        statedump_function = statedump_token + lbrace_token - ZeroOrMore(function_config + Optional(comma_token)) + rbrace_token
+        statedump_function.set_parse_action(lambda token: Statedump(token.as_list()))
+        # Overall function definition
+        function = grok_function | json_function | xml_function | kv_function | csv_function | mutate_function | base64_function | date_function | drop_function | statedump_function
         # Any operator that can appear in a statement
         conditional_operators = in_token|and_token|or_token|lte_token|gte_token|eq_token|ne_token|lt_token|gt_token|match_token|no_match_token|subtraction_token|addition_token|division_token|multiplication_token|not_token
         conditional_operators.set_name("operators")

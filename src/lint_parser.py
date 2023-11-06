@@ -26,7 +26,7 @@ if config_file:
         file_string = open_file.read()
         tokens = grammar.parse_string(file_string)
         ast = AST(tokens)
-        print(ast.value_table.values_used)
+        # print(ast.filter.body[0].config)
     except exceptions.ParseSyntaxException as oopsie:
         match = re.search("found '(.*)'", str(oopsie))
         if match:
