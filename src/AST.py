@@ -123,16 +123,19 @@ class Function:
                 self.config[keyword] = value
             except KeyError:
                 exists = None
-            # If the keyword exists in the acceptable config for the function, add the value to the dictionary
+            # If the keyword exists in the acceptable config for the function, add the value to the config
             if exists:
                 self.config[keyword] = value
 
+    # return the keyword of the function
     def get_name(self):
         return self.keyword.value
 
+    # return the value in the function's config if it is set, return None if not set
     def check_config(self, keyword):
         return self.config[keyword] if keyword in self.config else None
 
+    # TODO add values to the state, may need to be defined in each child class instead
     def build_state(self, state):
         for line in self.config:
             line.build_state(state, self.keyword.value)
