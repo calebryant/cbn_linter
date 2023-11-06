@@ -1,4 +1,5 @@
 from AST import *
+import re
 
 class State:
     def __init__(self, ast):
@@ -6,10 +7,10 @@ class State:
         self.values_used = []
         # self.functions_used = [] come back to later maybe
         self.value_occurrances = {}
-        self.scan_tree(self.ast)
+        self.scan_tree(self.ast.filter)
 
     def scan_tree(self, root):
-        for thing in root:
+        for thing in root.body:
             # TODO worry about conditionals and loops later
             # if isinstance(thing, If):
             #     # TODO do something with the statement
@@ -50,7 +51,44 @@ class State:
         match = grok.config["match"]
         overwrite = grok.config["overwrite"]
         on_error = grok.config["on_error"]
-        return None
+        state_data_set = set() # list of variable names that are added to state data in the grok function
+        state_data_used = set() # list of varible names that are used in the grok function i.e. it needs to exist in state data already
+        # Handle the match value
+        for pair in match.value.pairs: # match.value is always a hash
+            state_data_used = state_data_used.union({pair.left_value.value})
+            patterns = pair.right_value # patterns can be either a StringToken or it can be a List
+            if isinstance(patterns, List):
+                for value in patterns.values:
+                    state_data_set = state_data_set.union(set(self.parse_grok_pattern(value.value)))
+            elif isinstance(patterns, StringToken):
+                state_data_set = state_data_set.union(set(self.parse_grok_pattern(patterns.value)))
+        state_data_set = list(state_data_set)
+        state_data_used = list(state_data_used)
+        # Handle the overwrite value
+        overwrite = grok.config["overwrite"]
+        if not overwrite: 
+            print(f"Grok function at line {grok.keyword.row} is missing an overwrite.")
+        else: 
+            overwrite_list = overwrite.value
+            # overwrite list can also be just a string token
+            if isinstance(overwrite_list, List):
+                overwrite_list = overwrite_list.as_strings()
+            else:
+                overwrite_list = [overwrite_list.value]
+            missing_values = []
+            for value in state_data_set:
+                if value not in overwrite_list:
+                    missing_values.append(value)
+            if missing_values != []:
+                print(f"Missing values from overwrite: {missing_values}")
+        # Handle the on_error
+        return
+    # takes a grok pattern and returns a list of state data values set in the pattern
+    def parse_grok_pattern(self, pattern):
+        matches = re.findall("%\{[^}]+?:([^}]+?)\}", pattern) # matches '%{IP:value}' values in grok patterns
+        matches += re.findall("\?P<([^>]+)>", pattern) # matches '(?P<value>whatever is here)' values in grok patterns
+        return matches
+
     def check_json(self, json):
         return None
     def check_xml(self, xml):

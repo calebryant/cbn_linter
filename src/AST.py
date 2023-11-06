@@ -5,7 +5,6 @@
 # References: https://en.wikipedia.org/wiki/Abstract_syntax_tree
 
 from Tokens import *
-from State import State
 
 class AST:
     def __init__(self, filter_object):
@@ -281,6 +280,13 @@ class List:
         self.begin = config[0]
         self.values = config[1:-1]
         self.end = config[-1]
+    
+    # Returns the Logstash list object as a python list of string values
+    def as_strings(self):
+        strings = []
+        for value in self.values:
+            strings.append(value.value)
+        return strings
 
 class KeyValue:
     def __init__(self, config):
