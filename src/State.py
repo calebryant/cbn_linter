@@ -52,22 +52,66 @@ class State:
         on_error = grok.config["on_error"]
         return None
     def check_json(self, json):
+        source = json.config["source"]
+        target = json.config["target"]
+        array_function = json.config["array_function"]
+        on_error = json.config["on_error"]
         return None
     def check_xml(self, xml):
+        source = xml.config["source"]
+        target = xml.config["target"]
+        xpath = xml.config["xpath"]
+        on_error = xml.config["on_error"]
         return None
     def check_kv(self, kv):
+        source = kv.config["source"]
+        target = kv.config["target"]
+        field_split = kv.config["field_split"]
+        unescape_field_split = kv.config["unescape_field_split"]
+        value_split = kv.config["value_split"]
+        unescape_value_split = kv.config["unescape_value_split"]
+        whitespace = kv.config["whitespace"]
+        trim_value = kv.config["trim_value"]
+        on_error = kv.config["on_error"]
         return None
     def check_csv(self, csv):
+        source = csv.config["source"]
+        target = csv.config["target"]
+        separator = csv.config["separator"]
+        unescape_separator = csv.config["unescape_separator"]
         return None
     def check_mutate(self, mutate):
+        convert = mutate.config["convert"]
+        gsub = mutate.config["gsub"]
+        lowercase = mutate.config["lowercase"]
+        merge = mutate.config["merge"]
+        rename = mutate.config["rename"]
+        replace = mutate.config["replace"]
+        uppercase = mutate.config["uppercase"]
+        remove_field = mutate.config["remove_field"]
+        copy = mutate.config["copy"]
+        split = mutate.config["split"]
+        on_error = mutate.config["on_error"]
         return None
     def check_base64(self, base64):
+        source = base64.config["source"]
+        target = base64.config["target"]
+        encoding = base64.config["encoding"]
+        on_error = base64.config["on_error"]
         return None
     def check_date(self, date):
+        match = date.config["match"]
+        source = date.config["source"]
+        target = date.config["target"]
+        timezone = date.config["timezone"]
+        rebase = date.config["rebase"]
+        on_error = date.config["on_error"]
         return None
     def check_drop(self, drop):
+        tag = drop.config["tag"]
         return None
     def check_statedump(self, statedump):
+        label = statedump.config["label"]
         return None
     
     def check_value(self, value):
