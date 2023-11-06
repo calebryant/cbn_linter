@@ -1,4 +1,4 @@
-class ConfigState:
+class State:
     def __init__(self):
         self.values_used = []
         # self.functions_used = [] come back to later maybe

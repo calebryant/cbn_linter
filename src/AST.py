@@ -5,16 +5,16 @@
 # References: https://en.wikipedia.org/wiki/Abstract_syntax_tree
 
 from Tokens import *
-from ConfigState import ConfigState
+from State import State
 
 class AST:
     def __init__(self, filter_object):
         self.filter = filter_object
-        self.value_table = ConfigState()
+        self.value_table = State()
         # self.scan_tree()
 
     def scan_tree(self):
-        self.filter.configure_state(self.value_table)
+        self.filter.build_state(self.value_table)
 
     def to_json(self):
         json_object = {
@@ -39,9 +39,9 @@ class Block:
             self.body = config[3:-1]
             self.end = config[-1]
 
-    def configure_state(self, config_state):
+    def build_state(self, config_state):
         for value in self.body:
-            value.configure_state(config_state)
+            value.build_state(config_state)
         if self.statement:
             for token in self.statement:
                 if token == ConditionalToken:
@@ -133,9 +133,9 @@ class Function:
     def check_config(self, keyword):
         return self.config[keyword] if keyword in self.config else None
 
-    def configure_state(self, config_state):
+    def build_state(self, config_state):
         for line in self.config:
-            line.configure_state(config_state, self.keyword.value)
+            line.build_state(config_state, self.keyword.value)
 
     def to_json(self):
         json_object = {}
@@ -270,9 +270,9 @@ class FunctionConfig:
             
         # TODO: Check keywords contain the correct data type. Ex. make sure overwrite contains a list, etc...
 
-    def configure_state(self, config_state, function):
+    def build_state(self, config_state, function):
         if self.keyword.value == 'replace':
-            self.value.configure_state('replace')
+            self.value.build_state('replace')
         if self.keyword.value == 'on_error':
             config_state.add_value(self.value)
         if self.keywword.value == 'target':
@@ -298,9 +298,9 @@ class Hash:
         self.pairs = config[1:-1]
         self.end = config[-1]
 
-    def configure_state(self, config_state, func_type):
+    def build_state(self, config_state, func_type):
         for pair in self.pairs:
-            pair.configure_state(config_state, func_type)
+            pair.build_state(config_state, func_type)
 
 class List:
     def __init__(self, config):
@@ -308,7 +308,7 @@ class List:
         self.values = config[1:-1]
         self.end = config[-1]
 
-    # def configure_state(self, config, func_type):
+    # def build_state(self, config, func_type):
 
 
 class KeyValue:
@@ -318,7 +318,7 @@ class KeyValue:
         self.right_value = config[2]
         self.comma = config[-1] if type(config[-1]) == CommaToken else None
     
-    def configure_state(self, config_state, func_type):
+    def build_state(self, config_state, func_type):
         if func_type == "rename":
             pair = self.config
             config_state.add_value(pair["r_val"])
