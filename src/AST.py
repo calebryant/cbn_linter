@@ -288,7 +288,7 @@ class FunctionConfig:
             json_object = []
             for key in self.value.values:
                 json_object.append(key.value)
-        else:
+        # else:
             
             
 
