@@ -1,0 +1,12 @@
+{
+    "filter": {
+        "mutate": {
+            "replace": {
+                "message": "this is my message %{value}"
+            },
+            "merge": {
+                "event": "event1"
+            }
+        }
+    }
+}

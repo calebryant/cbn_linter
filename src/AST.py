@@ -10,11 +10,8 @@ from State import State
 class AST:
     def __init__(self, filter_object):
         self.filter = filter_object
-        self.value_table = State()
+        # self.value_table = State()
         # self.scan_tree()
-
-    def scan_tree(self):
-        self.filter.build_state(self.value_table)
 
     def to_json(self):
         json_object = {
@@ -38,14 +35,6 @@ class Block:
             self.begin = config[2]
             self.body = config[3:-1]
             self.end = config[-1]
-
-    def build_state(self, state):
-        for value in self.body:
-            value.build_state(state)
-        if self.statement:
-            for token in self.statement:
-                if token == ConditionalToken:
-                    state.add_value(token)
 
     def to_json(self):
         json_object = {}
@@ -112,7 +101,8 @@ class Function:
     # TODO: check config["config"] for valid keywords and values depending on the function type
     # Ex. Make sure a grok only has one of each of match, overwrite, and on_error
 
-    # TODO: add logic that will add tokens in state data to a value table
+    def get_config(self):
+        return self.config
 
     def set_config(self, config):
         # Loop through the list of function configs
@@ -134,11 +124,6 @@ class Function:
     # return the value in the function's config if it is set, return None if not set
     def check_config(self, keyword):
         return self.config[keyword] if keyword in self.config else None
-
-    # TODO add values to the state, may need to be defined in each child class instead
-    def build_state(self, state):
-        for line in self.config:
-            line.build_state(state, self.keyword.value)
 
     def to_json(self):
         json_object = {}
@@ -273,14 +258,6 @@ class FunctionConfig:
             
         # TODO: Check keywords contain the correct data type. Ex. make sure overwrite contains a list, etc...
 
-    def build_state(self, state, function):
-        if self.keyword.value == 'replace':
-            self.value.build_state('replace')
-        if self.keyword.value == 'on_error':
-            state.add_value(self.value)
-        if self.keywword.value == 'target':
-            state.add_value(self.value)
-
     def to_json(self):
         if type(self.value) == Hash:
             json_object = {}
@@ -292,8 +269,6 @@ class FunctionConfig:
             for key in self.value.values:
                 json_object.append(key.value)
         # else:
-            
-            
 
 class Hash:
     def __init__(self, config):
