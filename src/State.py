@@ -49,10 +49,9 @@ class State:
     def check_grok(self, grok):
         # Go through the Grok config
         match = grok.config["match"]
-        overwrite = grok.config["overwrite"]
-        on_error = grok.config["on_error"]
         state_data_set = set() # list of variable names that are added to state data in the grok function
         state_data_used = set() # list of varible names that are used in the grok function i.e. it needs to exist in state data already
+        errors = []
         # Handle the match value
         for pair in match.value.pairs: # match.value is always a hash
             state_data_used = state_data_used.union({pair.left_value.value})
@@ -62,12 +61,12 @@ class State:
                     state_data_set = state_data_set.union(set(self.parse_grok_pattern(value.value)))
             elif isinstance(patterns, StringToken):
                 state_data_set = state_data_set.union(set(self.parse_grok_pattern(patterns.value)))
-        state_data_set = list(state_data_set)
-        state_data_used = list(state_data_used)
+        state_data_set = state_data_set
+        state_data_used = state_data_used
         # Handle the overwrite value
         overwrite = grok.config["overwrite"]
         if not overwrite: 
-            print(f"Grok function at line {grok.keyword.row} is missing an overwrite.")
+            errors.append(f"Grok function at line {grok.keyword.row} missing overwrite.")
         else: 
             overwrite_list = overwrite.value
             # overwrite list can also be just a string token
@@ -80,9 +79,16 @@ class State:
                 if value not in overwrite_list:
                     missing_values.append(value)
             if missing_values != []:
-                print(f"Missing values from overwrite: {missing_values}")
+                formatted_values = ', '.join([f'"{value}"' for value in missing_values])
+                errors.append(f"Grok function at line {grok.keyword.row} missing values from overwrite: {formatted_values}")
         # Handle the on_error
-        return
+        on_error = grok.config["on_error"]
+        if not on_error:
+            errors.append(f"Grok function at line {grok.keyword.row} missing on_error.")
+        else:
+            state_data_set = state_data_set.union(on_error.value.value)
+            state_data_set = state_data_set.union()
+        return list(state_data_set), list(state_data_used), errors
     # takes a grok pattern and returns a list of state data values set in the pattern
     def parse_grok_pattern(self, pattern):
         matches = re.findall("%\{[^}]+?:([^}]+?)\}", pattern) # matches '%{IP:value}' values in grok patterns
