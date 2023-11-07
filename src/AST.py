@@ -14,7 +14,15 @@ class AST:
         # self.scan_tree()
 
     def scan_tree(self):
-        self.filter.build_state(self.value_table)
+        self.filter.scan_tree(self.value_table)
+
+    def get_state(self):
+        state = State()
+        state.add_variable("message")
+        self.filter.process_state(state)
+        #print(f"I am an AST with filter type: {type(self.filter)}")
+        return state
+
 
     def to_json(self):
         json_object = {
@@ -39,6 +47,13 @@ class Block:
             self.body = config[3:-1]
             self.end = config[-1]
 
+    def process_state(self, state):
+        #print( f"   A state here: my keyword is: {self.keyword.value} and my body is: {type(self.body)}" )
+        for child in self.body:
+           #print( f"     A child of state: {type(child)}" )
+           child.process_state(state)
+
+
     def build_state(self, state):
         for value in self.body:
             value.build_state(state)
@@ -58,6 +73,7 @@ class Block:
 class Filter(Block):
     def __init__(self, config):
         super().__init__(config)
+
 
 class If(Block):
     def __init__(self, config):
@@ -106,13 +122,20 @@ class Function:
     def __init__(self, config):
         self.keyword = config[0]
         self.begin = config[1]
-        self.config = {}
+        #self.config = {}
+        self.config = config[2:-1]
         self.end = config[-1]
 
     # TODO: check config["config"] for valid keywords and values depending on the function type
     # Ex. Make sure a grok only has one of each of match, overwrite, and on_error
 
     # TODO: add logic that will add tokens in state data to a value table
+
+    def process_state(self, state):
+        #print(f"       I am a Function: config is: {type(self.config)}")
+        for child in self.config:
+            #print(f"         Function Child: {type(child)}")
+            child.process_state(state)
 
     def set_config(self, config):
         # Loop through the list of function configs
@@ -209,20 +232,21 @@ class Csv(Function):
 class Mutate(Function):
     def __init__(self, config):
         super().__init__(config)
-        self.config = {
-            "convert" : None,
-            "gsub" : None,
-            "lowercase" : None,
-            "merge" : None,
-            "rename" : None,
-            "replace" : None,
-            "uppercase" : None,
-            "remove_field" : None,
-            "copy" : None,
-            "split" : None,
-            "on_error" : None
-        }
-        self.set_config(config)
+        #self.config = {
+        #    "convert" : None,
+        #    "gsub" : None,
+        #    "lowercase" : None,
+        #    "merge" : None,
+        #    "rename" : None,
+        #    "replace" : None,
+        #    "uppercase" : None,
+        #    "remove_field" : None,
+        #    "copy" : None,
+        #    "split" : None,
+        #    "on_error" : None
+        #}
+        #self.set_config(config)
+    
 
 class Base64(Function):
     def __init__(self, config):
@@ -273,13 +297,45 @@ class FunctionConfig:
             
         # TODO: Check keywords contain the correct data type. Ex. make sure overwrite contains a list, etc...
 
+    def process_state(self, state):
+        #print(f"           I am a FuncConf, keyword: {self.keyword.value} and value: {type(self.value)}")
+
+        # make sure all right side %{} vars exist
+        if self.keyword.value in [ "replace" ]:
+            #print('= testing for %{} in replace')
+            for value in self.value.get_right_values():
+                if value[0:2] == '%{' and value[-1] == '}':
+                    the_real_value = value[2:-1]
+                    try:
+                        print(f"= checking if {value} is in the state")
+                        state.value_occurrances[the_real_value]
+                    except KeyError:
+                        print(f"!! RIGHT SIDE DOES NOT EXIST IN REPLACE '{the_real_value}' is not in the state")
+
+        # make sure all right side vars exist as is
+        if self.keyword.value in [ "merge" ]:
+            #print('= testing right values as-is in state')
+            for value in self.value.get_right_values():
+               if not value[0:2] == '%{':
+                   try: 
+                       print(f"= testing '{value}' in state")
+                       state.value_occurrances[value]
+                   except KeyError:
+                       print(f"!! LEFT SIDE DOES NOT EXIST IN MERGE '{value}' is not in the state")
+                       
+        # insert all left vars into state
+        if self.keyword.value in [ "replace" , "merge" ]:
+            for value in self.value.get_left_values():
+                state.add_variable(value)
+
+
     def build_state(self, state, function):
         if self.keyword.value == 'replace':
             self.value.build_state('replace')
         if self.keyword.value == 'on_error':
-            state.add_value(self.value)
+            state.add_variable(self.value)
         if self.keywword.value == 'target':
-            state.add_value(self.value)
+            state.add_variable(self.value)
 
     def to_json(self):
         if type(self.value) == Hash:
@@ -300,6 +356,22 @@ class Hash:
         self.begin = config[0]
         self.pairs = config[1:-1]
         self.end = config[-1]
+
+    def get_left_values(self):
+        return_list = []
+        for pair in self.pairs:
+            #print(f"                pair left: {pair.left_value.value}")
+            return_list.append(pair.left_value.value)
+            
+        return return_list
+
+    def get_right_values(self):
+        return_list = []
+        for pair in self.pairs:
+            #print(f"                pair right: {pair.right_value.value}")
+            return_list.append(pair.right_value.value)
+            
+        return return_list
 
 class List:
     def __init__(self, config):
