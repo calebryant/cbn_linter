@@ -30,6 +30,8 @@ if config_file:
         #ast2 = AST(None)
         the_state = ast.get_state()
         print(f" state: {the_state}")
+        print(f"The {len(the_state.errors)} of the state are:")
+        print("\n".join(the_state.errors))
         #state = State(ast)
 
     except exceptions.ParseSyntaxException as oopsie:
