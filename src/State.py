@@ -31,6 +31,9 @@ class State:
         # temp
         self.add_variable(dest_var)
 
+    def remove_variable(self, variable_name):
+        del self.value_occurrances[variable_name]
+
     def add_variable(self, variable_name):
         current_var = ''
         index = 0

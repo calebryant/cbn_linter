@@ -334,11 +334,20 @@ class Mutate(Function):
                     state.errors.append(f"variable '{variable}' in uppercase command is not in state.  Line: {self.keyword.coordinates()[0]}")
 
         if self.config["remove_field"] != None:
-            print(f"   remove_field in a mutate, type is: {type(self.config['remove_field'])}")
+            for value in self.config['remove_field'].get_variable_list():
+                try:
+                    state.remove_variable(value)
+                except KeyError:
+                    # it is fine if the item does not exist?
+                    pass
+
         if self.config["copy"] != None:
             print(f"   copy in a mutate, type is: {type(self.config['copy'])}")
+            state.deep_variable_copy(self.config['copy'].l_val, self.config['copy'].l_val)
+
         if self.config["split"] != None:
             print(f"   split in a mutate, type is: {type(self.config['split'])}")
+
         if self.config["on_error"] != None:
             print(f"   on_error in a mutate, type is: {type(self.config['on_error'])}")
     
