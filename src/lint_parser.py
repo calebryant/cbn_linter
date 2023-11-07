@@ -5,10 +5,11 @@ import argparse, re, json
 from pyparsing import exceptions
 from Grammar import Grammar
 from AST import AST
+from State import *
 
 parser = argparse.ArgumentParser(
     prog='lint_parser.py',
-    description='Chronicle Parser Config Linting Tool'
+    description='Chronicle CBN Linting Tool'
 )
 
 parser.add_argument('-f', '--config_file')
@@ -29,6 +30,7 @@ if config_file:
         #ast2 = AST(None)
         the_state = ast.get_state()
         print(f" state: {the_state}")
+        state = State(ast)
 
     except exceptions.ParseSyntaxException as oopsie:
         match = re.search("found '(.*)'", str(oopsie))

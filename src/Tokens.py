@@ -76,52 +76,52 @@ class NumberToken(Token):
 # 		self.value = token_value
 
 class GrokToken(Token):
-	def _init__(self, position, column, row, token_value):
+	def __init__(self, position, column, row, token_value):
 		super().__init__(position, column, row)
 		self.value = "grok"
 
 class JsonToken(Token):
-	def _init__(self, position, column, row, token_value):
+	def __init__(self, position, column, row, token_value):
 		super().__init__(position, column, row)
 		self.value = "json"
 
 class XmlToken(Token):
-	def _init__(self, position, column, row, token_value):
+	def __init__(self, position, column, row, token_value):
 		super().__init__(position, column, row)
 		self.value = "xml"
 
 class KvToken(Token):
-	def _init__(self, position, column, row, token_value):
+	def __init__(self, position, column, row, token_value):
 		super().__init__(position, column, row)
 		self.value = "kv"
 
 class CsvToken(Token):
-	def _init__(self, position, column, row, token_value):
+	def __init__(self, position, column, row, token_value):
 		super().__init__(position, column, row)
 		self.value = "csv"
 
 class MutateToken(Token):
-	def _init__(self, position, column, row, token_value):
+	def __init__(self, position, column, row, token_value):
 		super().__init__(position, column, row)
 		self.value = "mutate"
 
 class Base64Token(Token):
-	def _init__(self, position, column, row, token_value):
+	def __init__(self, position, column, row, token_value):
 		super().__init__(position, column, row)
 		self.value = "base64"
 
 class DateToken(Token):
-	def _init__(self, position, column, row, token_value):
+	def __init__(self, position, column, row, token_value):
 		super().__init__(position, column, row)
 		self.value = "date"
 
 class DropToken(Token):
-	def _init__(self, position, column, row, token_value):
+	def __init__(self, position, column, row, token_value):
 		super().__init__(position, column, row)
 		self.value = "drop"
 
 class StatedumpToken(Token):
-	def _init__(self, position, column, row, token_value):
+	def __init__(self, position, column, row, token_value):
 		super().__init__(position, column, row)
 		self.value = "statedump"
 

@@ -5,12 +5,11 @@
 # References: https://en.wikipedia.org/wiki/Abstract_syntax_tree
 
 from Tokens import *
-from State import State
 
 class AST:
     def __init__(self, filter_object):
         self.filter = filter_object
-        self.value_table = State()
+        # self.value_table = State()
         # self.scan_tree()
 
     def scan_tree(self):
@@ -129,7 +128,8 @@ class Function:
     # TODO: check config["config"] for valid keywords and values depending on the function type
     # Ex. Make sure a grok only has one of each of match, overwrite, and on_error
 
-    # TODO: add logic that will add tokens in state data to a value table
+    def get_config(self):
+        return self.config
 
     def process_state(self, state):
         #print(f"       I am a Function: config is: {type(self.config)}")
@@ -157,11 +157,6 @@ class Function:
     # return the value in the function's config if it is set, return None if not set
     def check_config(self, keyword):
         return self.config[keyword] if keyword in self.config else None
-
-    # TODO add values to the state, may need to be defined in each child class instead
-    def build_state(self, state):
-        for line in self.config:
-            line.build_state(state, self.keyword.value)
 
     def to_json(self):
         json_object = {}
@@ -348,8 +343,6 @@ class FunctionConfig:
             for key in self.value.values:
                 json_object.append(key.value)
         # else:
-            
-            
 
 class Hash:
     def __init__(self, config):
@@ -378,6 +371,13 @@ class List:
         self.begin = config[0]
         self.values = config[1:-1]
         self.end = config[-1]
+    
+    # Returns the Logstash list object as a python list of string values
+    def as_strings(self):
+        strings = []
+        for value in self.values:
+            strings.append(value.value)
+        return strings
 
 class KeyValue:
     def __init__(self, config):
