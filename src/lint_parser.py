@@ -13,12 +13,12 @@ parser = argparse.ArgumentParser(
 )
 
 parser.add_argument('-f', '--config_file')
-parser.add_argument('-j', '--json')
+parser.add_argument('-e', '--show_errors')
 
 args = parser.parse_args()
 
 config_file = args.config_file
-json = args.json
+show_errors = args.show_errors
 
 if config_file:
     grammar = Grammar()
@@ -35,19 +35,13 @@ if config_file:
         #state = State(ast)
 
     except exceptions.ParseSyntaxException as oopsie:
-        match = re.search("found '(.*)'", str(oopsie))
-        if match:
-            found = match.group(1)
-        else:
-            found = ''
-        char_num = oopsie.loc
-        line_num = oopsie.lineno
-        col_num = oopsie.col
         print(oopsie.explain())
-        # print(oopsie.line)
-        # print(" " * (oopsie.column - 1) + "^")
         exit(1)
-    if json:
-        json_tokens = ast.to_json(tokens)
-        with open('tokens.json', 'w') as f:
-            json.dump(json_tokens, f)
+    
+    if show_errors:
+        for err in the_state.errors:
+            print(err)
+
+else:
+    print("No config file provided... Exiting")
+    exit(0)

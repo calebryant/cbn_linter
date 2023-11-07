@@ -9,6 +9,7 @@ class Token:
 		self.pos = position
 		self.col = column
 		self.row = row
+		self.value = token_value
     
 	def print_location(self):
 		return [ self.pos, self.col, self.row ]
@@ -16,30 +17,48 @@ class Token:
 	def coordinates(self):
 		return [ self.row, self.col]
 
+	def __str__(self):
+		return self.value + " "
+
 class LBraceToken(Token):
 	def __init__(self, position, column, row, token_value):
 		super().__init__(position, column, row)
 		self.value = '{'
+
+	def __str__(self):
+		return self.value + '\n'
 
 class RBraceToken(Token):
 	def __init__(self, position, column, row, token_value):
 		super().__init__(position, column, row)
 		self.value = '}'
 
+	def __str__(self):
+		return '\n' + self.value + '\n'
+
 class LBracketToken(Token):
 	def __init__(self, position, column, row, token_value):
 		super().__init__(position, column, row)
 		self.value = '['
+	
+	def __str__(self):
+		return self.value + '\n'
 
 class RBracketToken(Token):
 	def __init__(self, position, column, row, token_value):
 		super().__init__(position, column, row)
 		self.value = ']'
 
+	def __str__(self):
+		return '\n' + self.value + '\n'
+
 class LParenToken(Token):
 	def __init__(self, position, column, row, token_value):
 		super().__init__(position, column, row)
 		self.value = '('
+	
+	def __str__(self):
+		return self.value
 
 class RParenToken(Token):
 	def __init__(self, position, column, row, token_value):

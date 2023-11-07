@@ -187,6 +187,12 @@ class Function:
             json_object[key] = self.config[key].to_json()
         return json_object
 
+    def __str__(self):
+        config = ''
+        for line in self.config:
+            config += str(line) + '\n' if line != self.config[-1] else str(line)
+        return str(self.keyword) + str(self.begin)
+
 class Grok(Function):
     def __init__(self, config):
         super().__init__(config)
@@ -452,6 +458,9 @@ class FunctionConfig:
                 json_object.append(key.value)
         # else:
 
+    def __str__(self):
+        return str(self.keyword) + str(self.assign) + str(self.value)
+
 class Hash:
     def __init__(self, config):
         self.begin = config[0]
@@ -473,6 +482,12 @@ class Hash:
             return_list.append(pair.right_value.value)
             
         return return_list
+    
+    def __str__(self):
+        pairs = ''
+        for pair in self.pairs:
+            pairs += str(pair.left_value) + str(self.assign) + str(self.right_value) + '\n' if pair != self.pairs[-1] else str(pair.left_value) + str(self.assign) + str(self.right_value)
+        return str(self.begin) + pairs + str(self.end)
 
 class List:
     def __init__(self, config):
@@ -499,9 +514,18 @@ class List:
             strings.append(value.value)
         return strings
 
+    def __str__(self):
+        values = ''
+        for value in self.values:
+            values += str(value) + '\n' if value != self.values[-1] else str(value)
+        return str(self.begin) + values + str(self.end)
+
 class KeyValue:
     def __init__(self, config):
         self.left_value = config[0]
         self.assign = config[1]
         self.right_value = config[2]
         self.comma = config[-1] if type(config[-1]) == CommaToken else None
+
+    def __str__(self):
+        return str(self.left_value) + str(self.assign) + str(self.right_value)
