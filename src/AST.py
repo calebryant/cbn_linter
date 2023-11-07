@@ -303,11 +303,11 @@ class Mutate(Function):
             self.config['merge'].check_right_vars_exist(state)
             self.config['merge'].insert_left_vars(state)
         if self.config['rename'] != None:
-            print(f"   rename in a mutate, type is: {type(self.config['rename'])}")
+            #print(f"   rename in a mutate, type is: {type(self.config['rename'])}")
             self.config['rename'].check_left_vars_exist(state)
             self.config['rename'].insert_right_vars(state)
         if self.config['gsub'] != None:
-            print(f"   gsub in a mutate, type is: {type(self.config['gsub'])}")
+            #print(f"   gsub in a mutate, type is: {type(self.config['gsub'])}")
             the_variable = self.config['gsub'].get_first_value()
             if not state.does_variable_exist(the_variable):
                 print(f"!!! ERROR - variable {the_variable} does not exist in the state.  gsub command on line: {self.keyword.coordinates()[0]}")
@@ -390,12 +390,12 @@ class FunctionConfig:
         for value in self.value.get_left_values():
             if not state.does_variable_exist(value):
                 print(f"!! LEFT SIDE DOES NOT EXIST: '{value}' is not in the state - '{self.keyword.value}' function on line: {self.keyword.coordinates()[0]}")
+
     def get_first_value(self):
         if self.keyword.value != 'gsub':
-            print("why here")
-            return []
+            #print("!!!! Divide by zero")
+            return None
         else:
-            print(f"  GSUB funcCong - type of value: {type(self.value)}")
             return self.value.get_first_item()
 
 
