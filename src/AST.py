@@ -85,7 +85,7 @@ class If(Block):
             # Need to check if statements have
             self.statement.check_if_values_exist_in_state(state)
         else:
-            print(f"!! ERROR '{self.keyword.value}' block does not have a statement?!?!  this is divide by zero level shit")
+            state.errors.append(f"'{self.keyword.value}' block does not have a statement?!?!  this is divide by zero level shit")
 
         super().process_state(state)
 
@@ -250,16 +250,16 @@ class Csv(Function):
     def process_state(self, state):
         # Need to check that there is a source and an on_error
         if self.config['source'] == None:
-            print(f"!!! - ERROR - no 'source' for '{self.keyword.value}' command on line: {(self.keyword.coordinates()[0])}")
+            state.errors.append(f"no 'source' for '{self.keyword.value}' command on line: {(self.keyword.coordinates()[0])}")
         else:
             # a source is provided, but is it in the state?
             the_source_variable = self.config['source'].value.value
             #print(f"what is type {type(self.config['source'].value)} and value: {self.config['source'].value.value}")
             if not state.does_variable_exist(the_source_variable):
-                print(f"!!! - ERROR - source '{the_source_variable}' for CSV command is not in state.  Line: {(self.keyword.coordinates()[0])}")
+                state.errors.append(f"source '{the_source_variable}' for CSV command is not in state.  Line: {(self.keyword.coordinates()[0])}")
 
         if self.config['on_error'] == None:
-            print(f"!!! - ERROR - no 'on_error' for command '{self.keyword.value}' on line: {(self.keyword.coordinates()[0])}")
+            state.errors.append(f"no 'on_error' for command '{self.keyword.value}' on line: {(self.keyword.coordinates()[0])}")
         else:
             the_error_variable = self.config['on_error'].value.value
             #print(f"what is type {type(self.config['on_error'].value)} and value: {self.config['on_error'].value.value}")
@@ -299,19 +299,41 @@ class Mutate(Function):
         if self.config['replace'] != None:
             self.config['replace'].check_right_vars_in_braces_exist(state)
             self.config['replace'].insert_left_vars(state)
+
         if self.config['merge'] != None:
             self.config['merge'].check_right_vars_exist(state)
             self.config['merge'].insert_left_vars(state)
+
         if self.config['rename'] != None:
-            #print(f"   rename in a mutate, type is: {type(self.config['rename'])}")
             self.config['rename'].check_left_vars_exist(state)
             self.config['rename'].insert_right_vars(state)
+
         if self.config['gsub'] != None:
-            #print(f"   gsub in a mutate, type is: {type(self.config['gsub'])}")
             the_variable = self.config['gsub'].get_first_value()
             if not state.does_variable_exist(the_variable):
-                print(f"!!! ERROR - variable {the_variable} does not exist in the state.  gsub command on line: {self.keyword.coordinates()[0]}")
+                state.error_list.append(f"variable '{the_variable}' not in state.  gsub on line: {self.keyword.coordinates()[0]}")
                 
+        if self.config["convert"] != None:
+            self.config['convert'].check_left_vars_exist(state)
+
+        if self.config["lowercase"] != None:
+            for variable in self.config['lowercase'].get_variable_list():
+                if not state.does_variable_exist(variable):
+                    state.errors.append(f"variable '{variable}' in lowercase command is not in state.  Line: {self.keyword.coordinates()[0]}")
+
+        if self.config["uppercase"] != None:
+            for variable in self.config['uppercase'].get_variable_list():
+                if not state.does_variable_exist(variable):
+                    state.errors.append(f"variable '{variable}' in uppercase command is not in state.  Line: {self.keyword.coordinates()[0]}")
+
+        if self.config["remove_field"] != None:
+            print(f"   remove_field in a mutate, type is: {type(self.config['remove_field'])}")
+        if self.config["copy"] != None:
+            print(f"   copy in a mutate, type is: {type(self.config['copy'])}")
+        if self.config["split"] != None:
+            print(f"   split in a mutate, type is: {type(self.config['split'])}")
+        if self.config["on_error"] != None:
+            print(f"   on_error in a mutate, type is: {type(self.config['on_error'])}")
     
 
 class Base64(Function):
@@ -363,6 +385,13 @@ class FunctionConfig:
             
         # TODO: Check keywords contain the correct data type. Ex. make sure overwrite contains a list, etc...
 
+    # returns the values in the List of the parser.  So the array of a GSUB or LowerCase
+    def get_variable_list(self):
+        if not isinstance(self.value, List):
+            return []
+        else:
+            return self.value.get_values_of_list()
+
     def check_right_vars_in_braces_exist(self, state):
         #print('= NEW testing for %{} in replace')
         for value in self.value.get_right_values():
@@ -389,7 +418,7 @@ class FunctionConfig:
     def check_left_vars_exist(self, state):
         for value in self.value.get_left_values():
             if not state.does_variable_exist(value):
-                print(f"!! LEFT SIDE DOES NOT EXIST: '{value}' is not in the state - '{self.keyword.value}' function on line: {self.keyword.coordinates()[0]}")
+                state.errors.append(f"'{value}' not in state - '{self.keyword.value}' function on line: {self.keyword.coordinates()[0]}")
 
     def get_first_value(self):
         if self.keyword.value != 'gsub':
@@ -400,33 +429,7 @@ class FunctionConfig:
 
 
     def process_state(self, state):
-        #print(f"           I am a FuncConf, keyword: {self.keyword.value} and value: {type(self.value)}")
-
-        # make sure all right side %{} vars exist
-        if self.keyword.value in [ "replace" ]:
-            print('= OLD testing for %{} in replace')
-            #for value in self.value.get_right_values():
-            #    if value[0:2] == '%{' and value[-1] == '}':
-            #        the_real_value = value[2:-1]
-            #        if not state.does_variable_exist(the_real_value):
-            #            print(f"!! RIGHT SIDE DOES NOT EXIST IN REPLACE '{the_real_value}' is not in the state")
-
-        # make sure all right side vars exist as is
-        if self.keyword.value in [ "merge" ]:
-            print('= OLD testing right values as-is in state')
-            #for value in self.value.get_right_values():
-            #   if not value[0:2] == '%{':
-            #       try: 
-            #           print(f"= testing '{value}' in state - MERGE command, right side variable")
-            #           state.value_occurrances[value]
-            #       except KeyError:
-            #           print(f"!! LEFT SIDE DOES NOT EXIST IN MERGE '{value}' is not in the state")
-                       
-        # insert all left vars into state
-        if self.keyword.value in [ "replace" , "merge" ]:
-            pass
-            #for value in self.value.get_left_values():
-            #    state.add_variable(value)
+        print(f"           I am a FuncConf, running process_state()")
 
 
     def build_state(self, state, function):
@@ -479,6 +482,15 @@ class List:
     
     def get_first_item(self):
         return self.values[0].value
+
+    # returns JUST the values of the list, not the commas
+    def get_values_of_list(self):
+        strings = []
+        for value in self.values:
+            if not isinstance(value, CommaToken):
+               strings.append(value.value)
+        return strings
+
 
     # Returns the Logstash list object as a python list of string values
     def as_strings(self):
