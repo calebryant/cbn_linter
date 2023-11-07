@@ -9,6 +9,12 @@ class Token:
 		self.pos = position
 		self.col = column
 		self.row = row
+    
+	def print_location(self):
+		return [ self.pos, self.col, self.row ]
+
+	def coordinates(self):
+		return [ self.row, self.col]
 
 class LBraceToken(Token):
 	def __init__(self, position, column, row, token_value):

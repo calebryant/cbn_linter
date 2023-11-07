@@ -7,6 +7,7 @@ import os, re, json
 from Grammar import Grammar
 from pyparsing import exceptions
 
+root_dir = "/Users/tyler.slijboom/Library/CloudStorage/OneDrive - Cyderes/teleng"
 standard_parsers_dir = "/Users/caleb.bryant/Library/CloudStorage/OneDrive-Cyderes/TelEng/github/cyderes-parsers/standard"
 override_parsers_dir = "/Users/caleb.bryant/Library/CloudStorage/OneDrive-Cyderes/TelEng/github/cyderes-parsers/overrides"
 default_parsers_dir = "/Users/caleb.bryant/Library/CloudStorage/OneDrive-Cyderes/TelEng/github/chronicle-parsers"

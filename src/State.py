@@ -9,6 +9,50 @@ class State:
         self.errors = []
         self.scan_tree(self.ast.filter)
 
+    def __init__(self):
+        self.values_used = []
+        self.value_occurrances = {}
+        
+
+    #def add_token(self,token):
+    #    self.values_used.append(token.value)
+    #    try:
+    #        self.value_occurrances[token.value] += 1
+    #    except KeyError as e:
+    #        self.value_occurrances[token.value] = 0
+
+    def add_variable(self, variable_name):
+        current_var = ''
+        index = 0
+        for sub_variable in variable_name.split('.'):
+            current_var += f".{sub_variable}"
+            if index == 0:
+                current_var = current_var[1:]
+            index += 1
+
+            if current_var[0:6] != 'column':
+                print(f"+ adding {current_var} to state")
+            self.values_used.append(current_var)
+            try:
+                self.value_occurrances[current_var] += 1
+            except KeyError as e:
+                self.value_occurrances[current_var] = 1
+
+    def does_variable_exist(self, variable):
+        if not isinstance(variable, str):
+            print(f"= testing if '{variable}' is in the state: False")
+            return False
+        try:
+            self.value_occurrances[variable]
+            print(f"= testing if '{variable}' is in the state: True")
+            return True
+        except KeyError:
+            print(f"= testing if '{variable}' is in the state: False")
+            return False
+
+    def add_value(self, value):
+        self.add_variable(value)
+
     def scan_tree(self, root):
         for thing in root.body:
             if isinstance(thing, If):
@@ -231,3 +275,6 @@ class State:
 
     def add_error(self, error_string):
         self.errors.append(error_string)
+
+    def __str__(self):
+        return f"I am a state with {len(self.value_occurrances.keys())} values"
