@@ -30,7 +30,7 @@ if config_file:
         #ast2 = AST(None)
         the_state = ast.get_state()
         print(f" state: {the_state}")
-        state = State(ast)
+        #state = State(ast)
 
     except exceptions.ParseSyntaxException as oopsie:
         match = re.search("found '(.*)'", str(oopsie))
