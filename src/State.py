@@ -9,6 +9,11 @@ class State:
         self.value_occurrances = {}
         self.scan_tree(self.ast.filter)
 
+    def __init__(self):
+        self.values_used = []
+        self.value_occurrances = {}
+        
+
     #def add_token(self,token):
     #    self.values_used.append(token.value)
     #    try:
@@ -25,12 +30,25 @@ class State:
                 current_var = current_var[1:]
             index += 1
 
-            print(f"+ adding {current_var} to state")
+            if current_var[0:6] != 'column':
+                print(f"+ adding {current_var} to state")
             self.values_used.append(current_var)
             try:
                 self.value_occurrances[current_var] += 1
             except KeyError as e:
                 self.value_occurrances[current_var] = 1
+
+    def does_variable_exist(self, variable):
+        if not isinstance(variable, str):
+            print(f"= testing if '{variable}' is in the state: False")
+            return False
+        try:
+            self.value_occurrances[variable]
+            print(f"= testing if '{variable}' is in the state: True")
+            return True
+        except KeyError:
+            print(f"= testing if '{variable}' is in the state: False")
+            return False
 
     def add_value(self, value):
         self.add_variable(value)
