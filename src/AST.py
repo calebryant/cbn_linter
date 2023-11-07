@@ -5,6 +5,8 @@
 # References: https://en.wikipedia.org/wiki/Abstract_syntax_tree
 
 from Tokens import *
+from State import State
+
 
 class AST:
     def __init__(self, filter_object):
@@ -78,6 +80,15 @@ class If(Block):
     def __init__(self, config):
         super().__init__(config)
 
+    def process_state(self, state):
+        if self.statement != None:
+            # Need to check if statements have
+            self.statement.check_if_values_exist_in_state(state)
+        else:
+            print(f"!! ERROR '{self.keyword.value}' block does not have a statement?!?!  this is divide by zero level shit")
+
+        super().process_state(state)
+
 class ConditionalToken:
     def __init__(self,tokens):
         self.tokens = tokens
@@ -93,6 +104,14 @@ class ConditionalToken:
 class ConditionalStatement:
     def __init__(self,tokens):
         self.tokens = tokens
+
+    def check_if_values_exist_in_state(self, state):
+        #print(f"  TT I am a conditional statement trying to test if my variables exist")
+        for token in self.tokens:
+            #print(f"     TTT token: {token} of type: {type(token)}")
+            if isinstance(token, ConditionalToken):
+                #print(f"    TTTT name: {token.get_name()}")
+                state.does_variable_exist(token.get_name())
 
     def to_string():
         s = self.tokens[0].value
@@ -131,11 +150,15 @@ class Function:
     def get_config(self):
         return self.config
 
-    def process_state(self, state):
-        #print(f"       I am a Function: config is: {type(self.config)}")
+    def have_all_children_process_state(self, state):
         for child in self.config:
-            #print(f"         Function Child: {type(child)}")
-            child.process_state(state)
+            #print(f"         Function Child: {type(child)} and value: {child}")
+            if not isinstance(child, str):
+                child.process_state(state)
+        
+    def process_state(self, state):
+        # My children are FunctionConfig objects
+        pass
 
     def set_config(self, config):
         # Loop through the list of function configs
@@ -224,23 +247,61 @@ class Csv(Function):
         }
         self.set_config(config)
 
+    def process_state(self, state):
+        # Need to check that there is a source and an on_error
+        if self.config['source'] == None:
+            print(f"!!! - ERROR - no 'source' for '{self.keyword.value}' command on line: {(self.keyword.coordinates()[0])}")
+        else:
+            # a source is provided, but is it in the state?
+            the_source_variable = self.config['source'].value.value
+            #print(f"what is type {type(self.config['source'].value)} and value: {self.config['source'].value.value}")
+            if not state.does_variable_exist(the_source_variable):
+                print(f"!!! - ERROR - source '{the_source_variable}' for CSV command is not in state.  Line: {(self.keyword.coordinates()[0])}")
+
+        if self.config['on_error'] == None:
+            print(f"!!! - ERROR - no 'on_error' for command '{self.keyword.value}' on line: {(self.keyword.coordinates()[0])}")
+        else:
+            the_error_variable = self.config['on_error'].value.value
+            print(f"what is type {type(self.config['on_error'].value)} and value: {self.config['on_error'].value.value}")
+            state.add_variable(the_error_variable)
+
+        # Now insert the column values
+        if self.config['target'] != None:
+            # Need to add a state method that will add the columnXX to target.columnXX
+            for n in range(100):
+                state.add_variable( f"column{n}" )
+        else:
+            for n in range(100):
+                state.add_variable( f"column{n}" )
+
+
+        super().process_state(state)
+
 class Mutate(Function):
     def __init__(self, config):
         super().__init__(config)
-        #self.config = {
-        #    "convert" : None,
-        #    "gsub" : None,
-        #    "lowercase" : None,
-        #    "merge" : None,
-        #    "rename" : None,
-        #    "replace" : None,
-        #    "uppercase" : None,
-        #    "remove_field" : None,
-        #    "copy" : None,
-        #    "split" : None,
-        #    "on_error" : None
-        #}
-        #self.set_config(config)
+        self.config = {
+            "convert" : None,
+            "gsub" : None,
+            "lowercase" : None,
+            "merge" : None,
+            "rename" : None,
+            "replace" : None,
+            "uppercase" : None,
+            "remove_field" : None,
+            "copy" : None,
+            "split" : None,
+            "on_error" : None
+        }
+        self.set_config(config)
+        
+    def process_state(self, state):
+        if self.config['replace'] != None:
+            self.config['replace'].check_right_vars_in_braces_exist(state)
+            self.config['replace'].insert_left_vars(state)
+        if self.config['merge'] != None:
+            self.config['merge'].check_right_vars_exist(state)
+            self.config['merge'].insert_left_vars(state)
     
 
 class Base64(Function):
@@ -292,36 +353,58 @@ class FunctionConfig:
             
         # TODO: Check keywords contain the correct data type. Ex. make sure overwrite contains a list, etc...
 
+    def check_right_vars_in_braces_exist(self, state):
+        #print('= NEW testing for %{} in replace')
+        for value in self.value.get_right_values():
+            if value[0:2] == '%{' and value[-1] == '}':
+                the_real_value = value[2:-1]
+                if not state.does_variable_exist(the_real_value):
+                    print(f"!! RIGHT SIDE DOES NOT EXIST IN REPLACE '{the_real_value}' is not in the state")
+
+    def check_right_vars_exist(self, state):
+        #print('= NEW testing right values as-is in state')
+        for value in self.value.get_right_values():
+           if not value[0:2] == '%{':
+               if not state.does_variable_exist(value):
+                   print(f"!! RIGHT SIDE DOES NOT EXIST : '{value}' is not in the state - '{self.keyword.value}' function on line: {self.keyword.coordinates()[0]}")
+                       
+    def insert_right_vars(self, state):
+        for value in self.value.get_right_values():
+            state.add_variable(value)
+
+    def insert_left_vars(self, state):
+        for value in self.value.get_left_values():
+            state.add_variable(value)
+
+
     def process_state(self, state):
         #print(f"           I am a FuncConf, keyword: {self.keyword.value} and value: {type(self.value)}")
 
         # make sure all right side %{} vars exist
         if self.keyword.value in [ "replace" ]:
-            #print('= testing for %{} in replace')
-            for value in self.value.get_right_values():
-                if value[0:2] == '%{' and value[-1] == '}':
-                    the_real_value = value[2:-1]
-                    try:
-                        print(f"= checking if {value} is in the state")
-                        state.value_occurrances[the_real_value]
-                    except KeyError:
-                        print(f"!! RIGHT SIDE DOES NOT EXIST IN REPLACE '{the_real_value}' is not in the state")
+            print('= OLD testing for %{} in replace')
+            #for value in self.value.get_right_values():
+            #    if value[0:2] == '%{' and value[-1] == '}':
+            #        the_real_value = value[2:-1]
+            #        if not state.does_variable_exist(the_real_value):
+            #            print(f"!! RIGHT SIDE DOES NOT EXIST IN REPLACE '{the_real_value}' is not in the state")
 
         # make sure all right side vars exist as is
         if self.keyword.value in [ "merge" ]:
-            #print('= testing right values as-is in state')
-            for value in self.value.get_right_values():
-               if not value[0:2] == '%{':
-                   try: 
-                       print(f"= testing '{value}' in state")
-                       state.value_occurrances[value]
-                   except KeyError:
-                       print(f"!! LEFT SIDE DOES NOT EXIST IN MERGE '{value}' is not in the state")
+            print('= OLD testing right values as-is in state')
+            #for value in self.value.get_right_values():
+            #   if not value[0:2] == '%{':
+            #       try: 
+            #           print(f"= testing '{value}' in state - MERGE command, right side variable")
+            #           state.value_occurrances[value]
+            #       except KeyError:
+            #           print(f"!! LEFT SIDE DOES NOT EXIST IN MERGE '{value}' is not in the state")
                        
         # insert all left vars into state
         if self.keyword.value in [ "replace" , "merge" ]:
-            for value in self.value.get_left_values():
-                state.add_variable(value)
+            pass
+            #for value in self.value.get_left_values():
+            #    state.add_variable(value)
 
 
     def build_state(self, state, function):
