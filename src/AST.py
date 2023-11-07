@@ -262,7 +262,7 @@ class Csv(Function):
             print(f"!!! - ERROR - no 'on_error' for command '{self.keyword.value}' on line: {(self.keyword.coordinates()[0])}")
         else:
             the_error_variable = self.config['on_error'].value.value
-            print(f"what is type {type(self.config['on_error'].value)} and value: {self.config['on_error'].value.value}")
+            #print(f"what is type {type(self.config['on_error'].value)} and value: {self.config['on_error'].value.value}")
             state.add_variable(the_error_variable)
 
         # Now insert the column values
@@ -302,6 +302,16 @@ class Mutate(Function):
         if self.config['merge'] != None:
             self.config['merge'].check_right_vars_exist(state)
             self.config['merge'].insert_left_vars(state)
+        if self.config['rename'] != None:
+            print(f"   rename in a mutate, type is: {type(self.config['rename'])}")
+            self.config['rename'].check_left_vars_exist(state)
+            self.config['rename'].insert_right_vars(state)
+        if self.config['gsub'] != None:
+            print(f"   gsub in a mutate, type is: {type(self.config['gsub'])}")
+            the_variable = self.config['gsub'].get_first_value()
+            if not state.does_variable_exist(the_variable):
+                print(f"!!! ERROR - variable {the_variable} does not exist in the state.  gsub command on line: {self.keyword.coordinates()[0]}")
+                
     
 
 class Base64(Function):
@@ -375,6 +385,18 @@ class FunctionConfig:
     def insert_left_vars(self, state):
         for value in self.value.get_left_values():
             state.add_variable(value)
+
+    def check_left_vars_exist(self, state):
+        for value in self.value.get_left_values():
+            if not state.does_variable_exist(value):
+                print(f"!! LEFT SIDE DOES NOT EXIST: '{value}' is not in the state - '{self.keyword.value}' function on line: {self.keyword.coordinates()[0]}")
+    def get_first_value(self):
+        if self.keyword.value != 'gsub':
+            print("why here")
+            return []
+        else:
+            print(f"  GSUB funcCong - type of value: {type(self.value)}")
+            return self.value.get_first_item()
 
 
     def process_state(self, state):
@@ -455,6 +477,9 @@ class List:
         self.values = config[1:-1]
         self.end = config[-1]
     
+    def get_first_item(self):
+        return self.values[0].value
+
     # Returns the Logstash list object as a python list of string values
     def as_strings(self):
         strings = []
