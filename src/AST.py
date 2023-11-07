@@ -313,6 +313,7 @@ class Mutate(Function):
         if self.config['rename'] != None:
             self.config['rename'].check_left_vars_exist(state)
             self.config['rename'].insert_right_vars(state)
+            self.config['rename'].remove_left_vars(state)
 
         if self.config['gsub'] != None:
             the_variable = self.config['gsub'].get_first_value()
@@ -411,8 +412,14 @@ class FunctionConfig:
         for value in self.value.get_right_values():
            if not value[0:2] == '%{':
                if not state.does_variable_exist(value):
-                   print(f"!! RIGHT SIDE DOES NOT EXIST : '{value}' is not in the state - '{self.keyword.value}' function on line: {self.keyword.coordinates()[0]}")
+                   state.errors.append(f"'{value}' not in state - '{self.keyword.value}' function on line: {self.keyword.coordinates()[0]}")
                        
+    def remove_left_vars(self, state):
+        for value in self.value.get_left_values():
+            if state.does_variable_exist(value):
+                del state.value_occurrances[value]
+
+
     def insert_right_vars(self, state):
         for value in self.value.get_right_values():
             state.add_variable(value)
