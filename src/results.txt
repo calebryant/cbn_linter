@@ -1,2 +1,0 @@
-Parsing results
-/Users/caleb.bryant/Library/CloudStorage/OneDrive-Cyderes/TelEng/github/cyderes-parsers/standard/A10_LOAD_BALANCER/conf/a10_load_balancer.conf
