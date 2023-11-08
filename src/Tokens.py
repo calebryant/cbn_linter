@@ -18,47 +18,32 @@ class Token:
 		return [ self.row, self.col]
 
 	def __str__(self):
-		return self.value + " "
+		return self.value
 
 class LBraceToken(Token):
 	def __init__(self, position, column, row, token_value):
 		super().__init__(position, column, row)
 		self.value = '{'
 
-	def __str__(self):
-		return self.value + '\n'
-
 class RBraceToken(Token):
 	def __init__(self, position, column, row, token_value):
 		super().__init__(position, column, row)
 		self.value = '}'
 
-	def __str__(self):
-		return '\n' + self.value + '\n'
-
 class LBracketToken(Token):
 	def __init__(self, position, column, row, token_value):
 		super().__init__(position, column, row)
 		self.value = '['
-	
-	def __str__(self):
-		return self.value + '\n'
 
 class RBracketToken(Token):
 	def __init__(self, position, column, row, token_value):
 		super().__init__(position, column, row)
 		self.value = ']'
 
-	def __str__(self):
-		return '\n' + self.value + '\n'
-
 class LParenToken(Token):
 	def __init__(self, position, column, row, token_value):
 		super().__init__(position, column, row)
 		self.value = '('
-	
-	def __str__(self):
-		return self.value
 
 class RParenToken(Token):
 	def __init__(self, position, column, row, token_value):
@@ -204,5 +189,3 @@ class FilterToken(Token):
 	def __init__(self, position, column, row, token_value):
 		super().__init__(position, column, row)
 		self.value = "filter"
-		
-

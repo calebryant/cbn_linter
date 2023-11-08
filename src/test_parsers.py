@@ -10,11 +10,9 @@ from pyparsing import exceptions
 root_dir = "/Users/tyler.slijboom/Library/CloudStorage/OneDrive - Cyderes/teleng"
 standard_parsers_dir = "/Users/caleb.bryant/Library/CloudStorage/OneDrive-Cyderes/TelEng/github/cyderes-parsers/standard"
 override_parsers_dir = "/Users/caleb.bryant/Library/CloudStorage/OneDrive-Cyderes/TelEng/github/cyderes-parsers/overrides"
-default_parsers_dir = "/Users/caleb.bryant/Library/CloudStorage/OneDrive-Cyderes/TelEng/github/chronicle-parsers"
 
 standard_parsers_folders = sorted(os.walk(standard_parsers_dir))
 override_parsers_folders = sorted(os.walk(override_parsers_dir))
-default_parsers_folders = sorted(os.walk(default_parsers_dir))
 
 language_grammar = Grammar()
 failures = {}
@@ -46,31 +44,6 @@ f = open("overrides_failures.json", "w")
 json.dump(failures, f)
 f.close()
 failures = {}
-for path, folders, filenames in default_parsers_folders:
-    if len(folders) == 0:
-        for name in filenames:
-            if ".conf" in name:
-                print(f"{path}/{name}")
-                try:
-                    language_grammar.parse_file(f"{path}/{name}")
-                except exceptions.ParseSyntaxException as oopsie:
-                    failures[f"{path}/{name}"] = str(oopsie)
-                except exceptions.ParseException as oopsie:
-                    failures[f"{path}/{name}"] = str(oopsie)
-    else:
-        for folder in folders:
-            for name in filenames:
-                if ".conf" in name:
-                    print(f"{path}/{name}")
-                    try:
-                        language_grammar.parse_file(f"{path}/{name}")
-                    except exceptions.ParseSyntaxException as oopsie:
-                        failures[f"{path}/{name}"] = str(oopsie)
-                    except exceptions.ParseException as oopsie:
-                        failures[f"{path}/{name}"] = str(oopsie)
-f = open("default_failures.json", "w")
-json.dump(failures, f)
-f.close()
 
 # except exceptions.ParseSyntaxException as oopsie:
 #     match = re.search("found '(.*)'", str(oopsie))

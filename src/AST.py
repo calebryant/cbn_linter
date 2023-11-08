@@ -6,32 +6,17 @@
 
 from Tokens import *
 from State import State
+import re
 
 
 class AST:
     def __init__(self, filter_object):
         self.filter = filter_object
-        # self.value_table = State()
-        # self.scan_tree()
-
-    def scan_tree(self):
-        self.filter.scan_tree(self.value_table)
 
     def get_state(self):
         state = State()
-        state.add_variable("message")
         self.filter.process_state(state)
-        #print(f"I am an AST with filter type: {type(self.filter)}")
         return state
-
-
-    def to_json(self):
-        json_object = {
-            "filter": {}
-        }
-        for value in self.filter.body:
-            json_object[value.keyword.value] = value.to_json()
-        return json_object
 
 class Block:
     def __init__(self, config):
@@ -49,11 +34,8 @@ class Block:
             self.end = config[-1]
 
     def process_state(self, state):
-        #print( f"   A state here: my keyword is: {self.keyword.value} and my body is: {type(self.body)}" )
         for child in self.body:
-           #print( f"     A child of state: {type(child)}" )
            child.process_state(state)
-
 
     def build_state(self, state):
         for value in self.body:
@@ -63,18 +45,9 @@ class Block:
                 if token == ConditionalToken:
                     state.add_value(token)
 
-    def to_json(self):
-        json_object = {}
-        for value in self.body:
-            json_object[value.keyword.value] = value.to_json()
-        if self.statement:
-            return [self.statement.to_string(), json_object]
-        
-
 class Filter(Block):
     def __init__(self, config):
         super().__init__(config)
-
 
 class If(Block):
     def __init__(self, config):
@@ -160,6 +133,13 @@ class Function:
         # My children are FunctionConfig objects
         pass
 
+    def process_on_error(self, state):
+        on_error = self.check_config("on_error")
+        if not on_error:
+            state.add_error(f"line {self.keyword.row}, {str(self.keyword)} function missing on_error statement")
+        else:
+            state.add_variable(str(on_error.value))
+        
     def set_config(self, config):
         # Loop through the list of function configs
         for value in config[2:-1]:
@@ -181,12 +161,6 @@ class Function:
     def check_config(self, keyword):
         return self.config[keyword] if keyword in self.config else None
 
-    def to_json(self):
-        json_object = {}
-        for key in self.config:
-            json_object[key] = self.config[key].to_json()
-        return json_object
-
     def __str__(self):
         config = ''
         for line in self.config:
@@ -202,6 +176,50 @@ class Grok(Function):
             "on_error": None
         }
         self.set_config(config)
+    
+    def process_state(self, state):
+        # Need to parse each grok pattern to check for values used, each value needs to be in the overwrite statement
+        match = self.config["match"]
+        variables_used_in_patterns = []
+        if match:
+            for pair in match.value.pairs: # match.value is always a hash
+                source_field = str(pair.left_value)
+                state.does_variable_exist(source_field)
+                patterns = pair.right_value # patterns can be either a StringToken or it can be a List
+                if isinstance(patterns, List):
+                    values = set()
+                    for value in patterns.values:
+                        values = values.union(set(self.parse_grok_pattern(value.value)))
+                        for name in values:
+                            variables_used_in_patterns.append(name) if name not in variables_used_in_patterns else None
+        else:
+            state.add_error(f"line {grok.keyword.row}, grok missing match configuration")
+
+        # Handle the overwrite value
+        overwrite = self.config["overwrite"]
+        if overwrite:
+            overwrite_list = overwrite.value
+            # overwrite list can also be just a string token
+            if isinstance(overwrite_list, List):
+                overwrite_list = overwrite_list.as_strings()
+            else:
+                overwrite_list = [overwrite_list.value]
+            missing_values = []
+            for value in variables_used_in_patterns:
+                missing_values.append(value) if value not in overwrite_list else None
+            if missing_values != []:
+                formatted_values = ', '.join([f'"{value}"' for value in missing_values])
+                state.add_error(f"line {self.keyword.row}, grok function missing overwrite values: {formatted_values}")
+        else:
+            state.add_error(f"line {self.keyword.row}, grok function missing overwrite config")
+
+        self.process_on_error(state)
+    
+    def parse_grok_pattern(self, pattern):
+        matches = re.findall("%\{[^}]+?:([^}]+?)\}", pattern) # matches '%{IP:value}' values in grok patterns
+        matches += re.findall("\?P<([^>]+)>", pattern) # matches '(?P<value>whatever is here)' values in grok patterns
+        return matches
+
 
 class Json(Function):
     def __init__(self, config):
@@ -214,6 +232,9 @@ class Json(Function):
         }
         self.set_config(config)
 
+    def process_state(self, state):
+        self.process_on_error(state)
+
 class Xml(Function):
     def __init__(self, config):
         super().__init__(config)
@@ -224,6 +245,9 @@ class Xml(Function):
             "on_error" : None
         }
         self.set_config(config)
+    
+    def process_state(self, state):
+        self.process_on_error(state)
 
 class Kv(Function):
     def __init__(self, config):
@@ -240,6 +264,9 @@ class Kv(Function):
             "on_error" : None
         }
         self.set_config(config)
+
+    def process_state(self, state):
+        self.process_on_error(state)
 
 class Csv(Function):
     def __init__(self, config):
@@ -302,6 +329,8 @@ class Mutate(Function):
         self.set_config(config)
         
     def process_state(self, state):
+        self.process_on_error(state)
+        # replace is the only function that has the option to not generate an error so only that one needs to be defined
         if self.config['replace'] != None:
             self.config['replace'].check_right_vars_in_braces_exist(state)
             self.config['replace'].insert_left_vars(state)
@@ -375,6 +404,9 @@ class Date(Function):
             "on_error" : None
         }
         self.set_config(config)
+    
+    def process_state(self, state):
+        self.process_on_error(state)
 
 class Drop(Function):
     def __init__(self, config):
@@ -462,18 +494,6 @@ class FunctionConfig:
         if self.keywword.value == 'target':
             state.add_variable(self.value)
 
-    def to_json(self):
-        if type(self.value) == Hash:
-            json_object = {}
-            for key in self.value.pairs:
-                lval = key.left_value
-                json_object[lval] = key.r_val.value
-        elif type(self.value) == List:
-            json_object = []
-            for key in self.value.values:
-                json_object.append(key.value)
-        # else:
-
     def __str__(self):
         return str(self.keyword) + str(self.assign) + str(self.value)
 
@@ -542,6 +562,12 @@ class KeyValue:
         self.assign = config[1]
         self.right_value = config[2]
         self.comma = config[-1] if type(config[-1]) == CommaToken else None
+
+    def do_bracketed_values_exist(self):
+        # check if a replace string contains any variables
+        right_value = str(self.right_value)
+        match = re.match("%\{[^}]*}", right_value)
+        return True if match else False
 
     def __str__(self):
         return str(self.left_value) + str(self.assign) + str(self.right_value)
