@@ -79,12 +79,10 @@ class ConditionalStatement:
         self.tokens = tokens
 
     def check_if_values_exist_in_state(self, state):
-        #print(f"  TT I am a conditional statement trying to test if my variables exist")
         for token in self.tokens:
-            #print(f"     TTT token: {token} of type: {type(token)}")
-            if isinstance(token, ConditionalToken):
-                #print(f"    TTTT name: {token.get_name()}")
-                state.does_variable_exist(token.get_name())
+            if isinstance(token, ConditionalToken) and not state.does_variable_exist(token.get_name()):
+                state.add_error(f"line {token.tokens[0].row}, undeclared variable used in if statement")
+
 
     def to_string():
         s = self.tokens[0].value
