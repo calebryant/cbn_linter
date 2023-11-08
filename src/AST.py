@@ -83,7 +83,6 @@ class ConditionalStatement:
             if isinstance(token, ConditionalToken) and not state.does_variable_exist(token.get_name()):
                 state.add_error(f"line {token.tokens[0].row}, undeclared variable used in if statement")
 
-
     def to_string():
         s = self.tokens[0].value
         for token in self.tokens[1:]:
