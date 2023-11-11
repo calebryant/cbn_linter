@@ -1,280 +1,121 @@
 from AST import *
+from Tokens import *
 import re
 
 class State:
-    def __init__(self, ast):
-        self.ast = ast
-        self.explicit_values = {} # values that we know for sure will exist in state data
-        self.implicit_values = {} # values that might exist in state data depending on an error
-        self.errors = []
-        self.scan_tree(self.ast.filter)
-
     def __init__(self):
-        self.values_used = []
-        self.value_occurrances = {}
-        
+        # List of everything that exists in the current state
+        self.explicit_state = [ "@collectionTimestamp", "@collectionTimestamp.nanos", "@collectionTimestamp.seconds", "@createTimestamp", "@createTimestamp.nanos", "@createTimestamp.seconds", "@enableCbnForLoop", "@onErrorCount", "@output", "@timezone", "message" ]
+        self.implicit_state = []
 
-    #def add_token(self,token):
-    #    self.values_used.append(token.value)
-    #    try:
-    #        self.value_occurrances[token.value] += 1
-    #    except KeyError as e:
-    #        self.value_occurrances[token.value] = 0
+        # Dictionary that stores the name of all values set using a mutate function and a list of StateValue objects for each use of that value
+        self.value_table = {}
+        self.scope = []
+        # Issues that are absolutely not allowed
+        self.errors = []
+        # Issues that may not be fatal but should notify the user
+        self.warnings = []
 
-    def add_variable(self, variable_name):
+    def found_in_explicit_state(self, variable):
+        return True if variable in self.explicit_state else False
+
+    def found_in_implicit_state(self, variable):
+        return True if variable in self.implicit_state else False
+
+    def add_explicit_value(self, value_string):
         current_var = ''
-        index = 0
-        for sub_variable in variable_name.split('.'):
-            current_var += f".{sub_variable}"
+        val_as_list = value_string.split('.')
+        for index, sub_variable in enumerate(val_as_list):
             if index == 0:
-                current_var = current_var[1:]
-            index += 1
-
-            if current_var[0:6] != 'column':
-                print(f"+ adding {current_var} to state")
-            self.values_used.append(current_var)
-            try:
-                self.value_occurrances[current_var] += 1
-            except KeyError as e:
-                self.value_occurrances[current_var] = 1
-
-    def does_variable_exist(self, variable):
-        if not isinstance(variable, str):
-            print(f"= testing if '{variable}' is in the state: False")
-            return False
-        try:
-            self.value_occurrances[variable]
-            print(f"= testing if '{variable}' is in the state: True")
-            return True
-        except KeyError:
-            print(f"= testing if '{variable}' is in the state: False")
-            return False
-
-    def add_value(self, value):
-        self.add_variable(value)
-
-    def scan_tree(self, root):
-        for thing in root.body:
-            if isinstance(thing, If):
-                # TODO do something with the statement
-                self.scan_tree(thing)
-            if isinstance(thing, ElseIf):
-                self.scan_tree(thing)
-            if isinstance(thing, Else):
-                self.scan_tree(thing)
-            if isinstance(thing, For):
-                self.scan_tree(thing)
-            if isinstance(thing, Function):
-                if thing.get_name() == "grok":
-                    used = self.check_grok(thing)
-                elif thing.get_name() == "json":
-                    used = self.check_json(thing)
-                elif thing.get_name() == "xml":
-                    used = self.check_xml(thing)
-                elif thing.get_name() == "kv":
-                    used = self.check_kv(thing)
-                elif thing.get_name() == "csv":
-                    used = self.check_csv(thing)
-                elif thing.get_name() == "mutate":
-                    used = self.check_mutate(thing)
-                elif thing.get_name() == "base64":
-                    used = self.check_base64(thing)
-                elif thing.get_name() == "date":
-                    used = self.check_date(thing)
-                elif thing.get_name() == "drop":
-                    used = self.check_drop(thing)
-                elif thing.get_name() == "statedump":
-                    used = self.check_statedump(thing)
-        return None
-
-    def check_grok(self, grok):
-        # Go through the Grok config
-        match = grok.config["match"]
-        state_data_added = set() # list of variable names that are added to state data in the grok function
-        state_data_used = set() # list of varible names that are used in the grok function i.e. it needs to exist in state data already
-        # Handle the match value
-        for pair in match.value.pairs: # match.value is always a hash
-            state_data_used = state_data_used.union({pair.left_value.value})
-            patterns = pair.right_value # patterns can be either a StringToken or it can be a List
-            if isinstance(patterns, List):
-                for value in patterns.values:
-                    state_data_added = state_data_added.union(set(self.parse_grok_pattern(value.value)))
-                    for name in state_data_added:
-                        self.add_implicit_value(name, pair.left_value.row)
-            elif isinstance(patterns, StringToken):
-                state_data_added = state_data_added.union(set(self.parse_grok_pattern(patterns.value)))
-                self.add_implicit_value(patterns)
-        # Handle the overwrite value
-        overwrite = grok.config["overwrite"]
-        if not overwrite: 
-            self.add_error(f"Grok function at line {grok.keyword.row} missing overwrite.")
-        else: 
-            overwrite_list = overwrite.value
-            # overwrite list can also be just a string token
-            if isinstance(overwrite_list, List):
-                overwrite_list = overwrite_list.as_strings()
+                current_var = sub_variable
             else:
-                overwrite_list = [overwrite_list.value]
-            missing_values = []
-            for value in state_data_added:
-                if value not in overwrite_list:
-                    missing_values.append(value)
-            if missing_values != []:
-                formatted_values = ', '.join([f'"{value}"' for value in missing_values])
-                self.add_error(f"Grok function at line {grok.keyword.row} missing overwrites: {formatted_values}")
-        # Handle the on_error
-        on_error = grok.config["on_error"]
-        if not on_error:
-            self.add_error(f"Grok function at line {grok.keyword.row} missing on_error.")
+                current_var += f".{sub_variable}"
+            self.explicit_state.append(current_var) if current_var not in self.explicit_state else None
+    
+    def remove_explicit_value(self, value_string):
+        for name in self.explicit_state:
+            pattern = f"^{value_string}[.].+"
+            if re.match(pattern, name):
+                self.explicit_state.remove(name)
+    
+    def rename_explicit_value(self, value_string):
+        for name in self.explicit_state:
+            pattern = f"^{value_string}"
+            new_name = re.sub(pattern, value_string, name)
+            self.explicit_state[self.explicit_state.index(name)] = new_name if new_name else None
+
+    def add_implicit_value(self, value_string):
+        current_var = ''
+        val_as_list = value_string.split('.')
+        for index, sub_variable in enumerate(val_as_list):
+            if index == 0:
+                current_var = sub_variable
+            else:
+                current_var += f".{sub_variable}"
+            self.implicit_state.append(current_var) if current_var not in self.implicit_state else None
+    
+    def remove_implicit_value(self, value_string):
+        for name in self.implicit_state:
+            pattern = f"^{value_string}[.].+"
+            if re.match(pattern, name):
+                self.implicit_state.remove(name)
+
+    def rename_implicit_value(self, value_string):
+        for name in self.implicit_state:
+            pattern = f"^{value_string}"
+            new_name = re.sub(pattern, value_string, name)
+            self.implicit_state[self.implicit_state.index(name)] = new_name if new_name else None
+    
+    def add_to_value_table(self, name, contents):
+        if isinstance(name, CommaToken): return
+        assert isinstance(name, TokenToken) or isinstance(name, StringToken)
+        assert isinstance(contents, TokenToken) or isinstance(contents, StringToken) or contents == None
+        if str(name) not in self.value_table:
+            self.value_table[str(name)] = [StateValue(name, contents)]
         else:
-            self.add_explicit_value(on_error.value)
-        return list(state_data_used)
-
-    # takes a grok pattern and returns a list of state data values used in the pattern
-    def parse_grok_pattern(self, pattern):
-        matches = re.findall("%\{[^}]+?:([^}]+?)\}", pattern) # matches '%{IP:value}' values in grok patterns
-        matches += re.findall("\?P<([^>]+)>", pattern) # matches '(?P<value>whatever is here)' values in grok patterns
-        return matches
-
-    def check_json(self, json):
-        state_data_used = []
-        source = json.config["source"]
-        if source:
-            state_data_used.append(source.value.value)
-        target = json.config["target"]
-        if target:
-            self.add_implicit_value(target.value)
-        array_function = json.config["array_function"]
-        on_error = json.config["on_error"]
-        if not on_error:
-            self.add_error(f"JSON function at line {json.keyword.row} missing on_error.")
-        else: 
-            self.add_explicit_value(on_error.value)
-        return state_data_used
-
-    def check_xml(self, xml):
-        errors = []
-        source = xml.config["source"]
-        target = xml.config["target"]
-        if target:
-            self.add_implicit_value(target.value)
-        xpath = xml.config["xpath"]
-        on_error = xml.config["on_error"]
-        if not on_error:
-            self.add_error(f"XML function at line {xml.keyword.row} missing on_error.")
-        else: 
-            self.add_explicit_value(on_error.value)
-
-    def check_kv(self, kv):
-        errors = []
-        source = kv.config["source"]
-        target = kv.config["target"]
-        if target:
-            self.add_implicit_value(target.value)
-        field_split = kv.config["field_split"]
-        unescape_field_split = kv.config["unescape_field_split"]
-        value_split = kv.config["value_split"]
-        unescape_value_split = kv.config["unescape_value_split"]
-        whitespace = kv.config["whitespace"]
-        trim_value = kv.config["trim_value"]
-        on_error = kv.config["on_error"]
-        if not on_error:
-            self.add_error(f"KV function at line {kv.keyword.row} missing on_error.")
-        else: 
-            self.add_explicit_value(on_error.value)
-
-    def check_csv(self, csv):
-        errors = []
-        source = csv.config["source"]
-        target = csv.config["target"]
-        if target:
-            self.add_implicit_value(target.value)
-        separator = csv.config["separator"]
-        unescape_separator = csv.config["unescape_separator"]
-        on_error = kv.config["on_error"]
-        if not on_error:
-            self.add_error(f"CSV function at line {csv.keyword.row} missing on_error.")
-        else: 
-            self.add_explicit_value(on_error.value)
-            
-    def check_mutate(self, mutate):
-        convert = mutate.config["convert"]
-        gsub = mutate.config["gsub"]
-        lowercase = mutate.config["lowercase"]
-        merge = mutate.config["merge"]
-        rename = mutate.config["rename"]
-        replace = mutate.config["replace"]
-        uppercase = mutate.config["uppercase"]
-        remove_field = mutate.config["remove_field"]
-        copy = mutate.config["copy"]
-        split = mutate.config["split"]
-        on_error = mutate.config["on_error"]
-        if not on_error:
-            self.add_error(f"Mutate function at line {mutate.keyword.row} missing on_error.")
-        else: 
-            self.add_explicit_value(on_error.value)
-
-    def check_base64(self, base64):
-        errors = []
-        source = base64.config["source"]
-        target = base64.config["target"]
-        if target:
-            self.add_implicit_value(target.value)
-        encoding = base64.config["encoding"]
-
-    def check_date(self, date):
-        errors = []
-        match = date.config["match"]
-        source = date.config["source"]
-        target = date.config["target"]
-        if target:
-            self.add_implicit_value(target.value)
-        timezone = date.config["timezone"]
-        rebase = date.config["rebase"]
-        on_error = date.config["on_error"]
-        if not on_error:
-            self.add_error(f"Date function at line {date.keyword.row} missing on_error.")
-        else: 
-            self.add_explicit_value(on_error.value)
-
-    def check_drop(self, drop):
-        tag = drop.config["tag"]
-
-    def check_statedump(self, statedump):
-        label = statedump.config["label"]
-
-    def add_explicit_value(self, *args):
-        if len(args) == 1:
-            try:
-                self.explicit_values[args[0].value].append(args[0].row)
-            except KeyError:
-                self.explicit_values[args[0].value] = [args[0].row]
-        elif len(args) == 2:
-            try:
-                self.explicit_values[args[0]].append(args[1])
-            except KeyError:
-                self.explicit_values[args[0]] = [args[1]]
-
-    def add_implicit_value(self, *args):
-        if len(args) == 1:
-            try:
-                self.implicit_values[args[0].value].append(args[0].row)
-            except KeyError:
-                self.implicit_values[args[0].value] = [args[0].row]
-        elif len(args) == 2:
-            try:
-                self.implicit_values[args[0]].append(args[1])
-            except KeyError:
-                self.implicit_values[args[0]] = [args[1]]
-
-    def remove_value(self, token):
-        self.values.remove(token.value)
+            self.value_table[str(name)].append(StateValue(name, contents))
 
     def check_value(self, value_name):
-        return value_name in self.values_used
+        return value_name in self.explicit_state
 
     def add_error(self, error_string):
         self.errors.append(error_string)
+    
+    def add_warning(self, warning_string):
+        self.warnings.append(warning_string)
 
     def __str__(self):
-        return f"I am a state with {len(self.value_occurrances.keys())} values"
+        s = ""
+        for val in sorted(self.values):
+            s += val + '\n'
+        return s
+
+    def push_scope(self):
+        state_copy = self.explicit_state.copy()
+        self.scope.append(state_copy)
+
+    def pop_scope(self):
+        current_scope = self.explicit_state
+        old_scope = self.scope.pop()
+        for value in current_scope:
+            if value not in old_scope:
+                self.implicit_state.append(value)
+        self.explicit_state = old_scope
+
+class StateValue:
+    def __init__(self, name, contents):
+        # token of the entry in the state
+        self.name = name
+        # token of the value used to set the name
+        self.contents = contents
+        # line where name is set to contents
+        self.lineno = self.get_line()
+
+    def get_line(self):
+        return int(self.name)
+
+    def __str__(self):
+        return f"{str(self.name)}: {str(self.contents)} at line {self.lineno}"
+
+    def __int__(self):
+        return self.lineno
