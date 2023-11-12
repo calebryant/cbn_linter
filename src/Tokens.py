@@ -17,6 +17,9 @@ class Token:
 	def coordinates(self):
 		return [ self.row, self.col]
 
+	def __int__(self):
+		return self.row
+
 	def __str__(self):
 		return self.value
 
@@ -139,6 +142,156 @@ class FunctionConfigToken(Token):
 	def __init__(self, position, column, row, token_value):
 		super().__init__(position, column, row)
 		self.value = token_value
+
+class MatchToken(Token):
+    def __init__(self, position, column, row, token_value):
+        super().__init__(position, column, row)
+        self.value = token_value
+
+class OverwriteToken(Token):
+    def __init__(self, position, column, row, token_value):
+        super().__init__(position, column, row)
+        self.value = token_value
+
+class OnErrorToken(Token):
+    def __init__(self, position, column, row, token_value):
+        super().__init__(position, column, row)
+        self.value = token_value
+
+class SourceToken(Token):
+    def __init__(self, position, column, row, token_value):
+        super().__init__(position, column, row)
+        self.value = token_value
+
+class TargetToken(Token):
+    def __init__(self, position, column, row, token_value):
+        super().__init__(position, column, row)
+        self.value = token_value
+
+class ArrayFunctionToken(Token):
+    def __init__(self, position, column, row, token_value):
+        super().__init__(position, column, row)
+        self.value = token_value
+
+class XpathToken(Token):
+    def __init__(self, position, column, row, token_value):
+        super().__init__(position, column, row)
+        self.value = token_value
+
+class FieldSplitToken(Token):
+    def __init__(self, position, column, row, token_value):
+        super().__init__(position, column, row)
+        self.value = token_value
+
+class UnescapeFieldSplitToken(Token):
+    def __init__(self, position, column, row, token_value):
+        super().__init__(position, column, row)
+        self.value = token_value
+
+class ValueSplitToken(Token):
+    def __init__(self, position, column, row, token_value):
+        super().__init__(position, column, row)
+        self.value = token_value
+
+class UnescapeValueSplitToken(Token):
+    def __init__(self, position, column, row, token_value):
+        super().__init__(position, column, row)
+        self.value = token_value
+
+class WhitespaceToken(Token):
+    def __init__(self, position, column, row, token_value):
+        super().__init__(position, column, row)
+        self.value = token_value
+
+class TrimValueToken(Token):
+    def __init__(self, position, column, row, token_value):
+        super().__init__(position, column, row)
+        self.value = token_value
+
+class SeparatorToken(Token):
+    def __init__(self, position, column, row, token_value):
+        super().__init__(position, column, row)
+        self.value = token_value
+
+class UnescapeSeparatorToken(Token):
+    def __init__(self, position, column, row, token_value):
+        super().__init__(position, column, row)
+        self.value = token_value
+
+class ConvertToken(Token):
+    def __init__(self, position, column, row, token_value):
+        super().__init__(position, column, row)
+        self.value = token_value
+
+class GsubToken(Token):
+    def __init__(self, position, column, row, token_value):
+        super().__init__(position, column, row)
+        self.value = token_value
+
+class LowercaseToken(Token):
+    def __init__(self, position, column, row, token_value):
+        super().__init__(position, column, row)
+        self.value = token_value
+
+class MergeToken(Token):
+    def __init__(self, position, column, row, token_value):
+        super().__init__(position, column, row)
+        self.value = token_value
+
+class RenameToken(Token):
+    def __init__(self, position, column, row, token_value):
+        super().__init__(position, column, row)
+        self.value = token_value
+
+class ReplaceToken(Token):
+    def __init__(self, position, column, row, token_value):
+        super().__init__(position, column, row)
+        self.value = token_value
+
+class UppercaseToken(Token):
+    def __init__(self, position, column, row, token_value):
+        super().__init__(position, column, row)
+        self.value = token_value
+
+class RemoveFieldToken(Token):
+    def __init__(self, position, column, row, token_value):
+        super().__init__(position, column, row)
+        self.value = token_value
+
+class CopyToken(Token):
+    def __init__(self, position, column, row, token_value):
+        super().__init__(position, column, row)
+        self.value = token_value
+
+class SplitToken(Token):
+    def __init__(self, position, column, row, token_value):
+        super().__init__(position, column, row)
+        self.value = token_value
+
+class EncodingToken(Token):
+    def __init__(self, position, column, row, token_value):
+        super().__init__(position, column, row)
+        self.value = token_value
+
+class TimezoneToken(Token):
+    def __init__(self, position, column, row, token_value):
+        super().__init__(position, column, row)
+        self.value = token_value
+
+class RebaseToken(Token):
+    def __init__(self, position, column, row, token_value):
+        super().__init__(position, column, row)
+        self.value = token_value
+
+class TagToken(Token):
+    def __init__(self, position, column, row, token_value):
+        super().__init__(position, column, row)
+        self.value = token_value
+
+class LabelToken(Token):
+    def __init__(self, position, column, row, token_value):
+        super().__init__(position, column, row)
+        self.value = token_value
 
 class RegexToken(Token):
 	def __init__(self, position, column, row, token_value):
