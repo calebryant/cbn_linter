@@ -1,9 +1,0 @@
-#!/bin/zsh
-
-CUSTOMER=CYENGDEV
-LOGTYPE=CYDERES_TEST_EVENT
-WORKFLOWDIR=$ONEDRIVE/TelEng/github/parser-linting
-CONFIGFILE=$WORKFLOWDIR/test/test.conf
-LOGFILE=$WORKFLOWDIR/test/test.log
-alias testlog="chronicle parser test -c $CUSTOMER -l $LOGTYPE -t $LOGFILE -f $CONFIGFILE"
-alias testing="py $WORKFLOWDIR/src/lint_parser.py -f $CONFIGFILE"
