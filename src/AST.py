@@ -6,7 +6,6 @@
 
 from Tokens import *
 from State import State
-from pyparsing import ParseSyntaxException, ParseFatalException
 import re
 
 
