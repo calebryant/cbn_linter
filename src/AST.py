@@ -300,12 +300,10 @@ class Mutate(Function):
         on_error = self.config["on_error"]
         if on_error:
             on_error.update_state(state)
-        elif rename or split or copy or merge or convert: # split, copy, merge, and convert always need on_error statements 
+        elif rename or split or copy or merge or convert: # rename, split, copy, merge, and convert always need on_error statements, uppercase, lowercase, gsub, and remove_field do not
             state.add_error(f"line {self.keyword.row}, mutate function missing on_error statement")
         elif replace and replace.does_replace_string_contain_variables(): # replace does not need an on_error if no values are used in the right side
             state.add_error(f"line {self.keyword.row}, mutate function missing on_error statement")
-        # elif rename: # rename only needs an on_error if the destination (right) field already exists
-        #         state.add_error(f"line {self.keyword.row}, mutate function missing on_error statement")
 
 class Base64(Function):
     def __init__(self, config):
