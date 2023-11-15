@@ -1,3 +1,8 @@
+# Created 2023/11/06
+# Author: Caleb Bryant
+# Title: State.py
+# Description: Keeps track of the state of variables used in a parser
+
 from AST import *
 from Tokens import *
 import re
