@@ -372,13 +372,13 @@ class Grammar:
         field_split_function_config = field_split_token + arrow_token + string_token
         field_split_function_config.set_parse_action(lambda token: FieldSplit(token.as_list()))
         # unescape_field_split function config pattern definition
-        unescape_field_split_function_config = unescape_field_split_token + arrow_token + string_token
+        unescape_field_split_function_config = unescape_field_split_token + arrow_token + boolean_token
         unescape_field_split_function_config.set_parse_action(lambda token: UnescapeFieldSplit(token.as_list()))
         # value_split function config pattern definition
         value_split_function_config = value_split_token + arrow_token + string_token
         value_split_function_config.set_parse_action(lambda token: ValueSplit(token.as_list()))
         # unescape_value_split function config pattern definition
-        unescape_value_split_function_config = unescape_value_split_token + arrow_token + string_token
+        unescape_value_split_function_config = unescape_value_split_token + arrow_token + boolean_token
         unescape_value_split_function_config.set_parse_action(lambda token: UnescapeValueSplit(token.as_list()))
         # whitespace function config pattern definition
         whitespace_function_config = whitespace_token + arrow_token + string_token

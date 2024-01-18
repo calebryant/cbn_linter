@@ -564,7 +564,11 @@ class Replace(FunctionConfig):
         for kv in self.value.pairs:
             source = kv.right_value
             destination = kv.left_value
-            state.add_implicit_value(str(destination))
+            # if a replace does not use any variables in the right value, then it cannot error, therefore the destination can go in the explicit values
+            if self.does_replace_string_contain_variables():
+                state.add_implicit_value(str(destination))
+            else:
+                state.add_explicit_value(str(destination))
             state.add_to_value_table(destination, source)
 
     def does_replace_string_contain_variables(self):
