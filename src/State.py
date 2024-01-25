@@ -120,7 +120,8 @@ class StateValue:
         return int(self.name)
 
     def __str__(self):
-        return f"{str(self.name)}: {str(self.contents)} at line {self.lineno}"
+        return str(self.name)
+        # return f"{str(self.name)}: {str(self.contents)} at line {self.lineno}"
 
     def __int__(self):
         return self.lineno
