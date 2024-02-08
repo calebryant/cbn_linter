@@ -6,6 +6,7 @@
 
 from Tokens import *
 from State import State
+from copy import copy
 import re
 
 
@@ -531,6 +532,8 @@ class Merge(FunctionConfig):
         for kv in self.value.pairs:
             source = kv.right_value
             destination = kv.left_value
+            split_name = str(source).split('.')
+            dict_to_merge = state.get_value(split_name, state.value_table.copy())
             state.add_implicit_value(str(destination))
             state.add_to_value_table(destination, source)
 

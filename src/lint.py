@@ -6,6 +6,7 @@ from pyparsing import exceptions
 from Grammar import Grammar
 from AST import AST
 from State import State
+import re
 
 def lint_cbn():
     parser = argparse.ArgumentParser(
@@ -18,6 +19,7 @@ def lint_cbn():
     parser.add_argument('-w', '--warnings', action='store_true', help="Print the parser's warnings to terminal")
     parser.add_argument('-s', '--print_state', action='store_true', help="Print the parser's state values to the terminal")
     parser.add_argument('-o', '--output', help="File path to print terminal output")
+    parser.add_argument('-u', '--udm', action="store_true", help="Output a summary of all UDM fields set by the parser")
 
     args = parser.parse_args()
 
@@ -26,6 +28,7 @@ def lint_cbn():
     show_warnings = args.warnings
     print_state = args.print_state
     output = args.output
+    udm = args.udm
 
     if config_file:
         grammar = Grammar()
@@ -44,6 +47,8 @@ def lint_cbn():
             for error in the_state.errors:
                 errors += f"[ERROR] {config_file}, {error}\n"
             print(errors) if not output else None
+            if the_state.errors != []:
+                exit(1)
         
         if show_warnings:
             warnings = ""
@@ -58,11 +63,39 @@ def lint_cbn():
                     state += f"{str(state_value)}\n"
             print(state) if not output else None
 
-        # if output:
-            # TODO
+        def traverse_udm(udm_dict, parent):
+            for key,value in udm_dict.items():
+                if isinstance(value, dict):
+                    new_parent = f"{parent}.{key}" if parent != "" else key
+                    traverse_udm(value, new_parent)
+                elif isinstance(value, list):
+                    # field_name = f"{parent}.{key}" if parent != "" else key
+                    # print(field_name, [str(val) for val in value])
+                    new_val = None
+                    field_name = ""
+                    for index in value:
+                        new_val = None
+                        if new_val := the_state.get_value(str(index).split('.'), the_state.value_table):
+                            new_parent = f"{parent}.{key}" if parent != "" else key
+                            if isinstance(new_val, list):
+                                field_name = f"{parent}.{key}" if parent != "" else key
+                                print(field_name, [str(val) for val in new_val])
+                            else:
+                                traverse_udm(new_val, new_parent)
+                        # else:
+                        #     field_name = f"{parent}.{key}" if parent != "" else key
+                        #     print(field_name, [str(val) for val in value])
 
-        if the_state.errors != []:
-            exit(1)
+        if udm:
+            udm_fields = {}
+            try:
+                events = the_state.value_table["@output"]
+                for event in events:
+                    event = str(event) + ".idm.read_only_udm"
+                    if value := the_state.get_value(event.split('.'), the_state.value_table):
+                        traverse_udm(value, "")
+            except KeyError:
+                exit(0)
 
     else:
         print("No config file provided... Exiting")

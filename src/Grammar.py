@@ -324,7 +324,7 @@ class Grammar:
         number_token.set_parse_action(lambda string,position,token: NumberToken(position, col(position,string), lineno(position,string), token.as_list()[0]))
         # Regex tokens
         # regex_token = Combine((Opt('\\') + Literal('/')) + ... + (Opt('\\') + Literal('/')))
-        regex_token = QuotedString('/', escChar='\\')
+        regex_token = QuotedString('\\/|/', escChar='\\')
         regex_token.set_name("regex")
         regex_token.set_parse_action(lambda string,position,token: RegexToken(position, col(position,string), lineno(position,string), token.as_list()[0]))
 
@@ -485,7 +485,7 @@ class Grammar:
         # Any value that can appear in a statement
         conditional_value = number_token|string_token|regex_token|boolean_token|conditional_token|token_token|conditional_list_value
         # Conditional expressions are difficult to parse and are not really necessary to fully evaluate so we don't care what order the tokens are in as long as they are valid conditional statement grammar
-        statement = OneOrMore(lparen_token|rparen_token|conditional_value|conditional_operators)
+        statement = OneOrMore(lparen_token|rparen_token|conditional_value|conditional_operators|regex_token)
         statement.set_parse_action(lambda token: ConditionalStatement(token.as_list()))
 
         if_block <<= if_token - statement + lbrace_token - ZeroOrMore(function|conditional|loop) + rbrace_token
