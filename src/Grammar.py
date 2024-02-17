@@ -306,14 +306,15 @@ class Grammar:
 
 
         # Literal value tokens
-        # Token token, Chronicle calls state value field names tokens in their docs
-        token_token = Word(srange("[a-zA-Z0-9_.\-@]"))
-        token_token.set_name("token")
-        token_token.set_parse_action(lambda string,position,token: TokenToken(position, col(position,string), lineno(position,string), token.as_list()[0]))
         # String token, strings can be surrounded by "" or ''
-        string_token = QuotedString('"', escChar='\\') | QuotedString("'", escChar='\\')
+        string_token = QuotedString('"', escChar='\\', multiline=True) | QuotedString("'", escChar='\\', multiline=True)
         string_token.set_name("string")
         string_token.set_parse_action(lambda string,position,token: StringToken(position, col(position,string), lineno(position,string), token.as_list()[0]))
+        # Token token, Chronicle calls state value field names tokens in their docs
+        token_token = Word(srange("[a-zA-Z0-9_.\-@]"))
+        token_token = token_token | QuotedString('"') | QuotedString("'")
+        token_token.set_name("token")
+        token_token.set_parse_action(lambda string,position,token: TokenToken(position, col(position,string), lineno(position,string), token.as_list()[0]))
         # Boolean token
         boolean_token = Keyword("true") | Keyword("false")
         boolean_token.set_name("boolean")
@@ -324,7 +325,7 @@ class Grammar:
         number_token.set_parse_action(lambda string,position,token: NumberToken(position, col(position,string), lineno(position,string), token.as_list()[0]))
         # Regex tokens
         # regex_token = Combine((Opt('\\') + Literal('/')) + ... + (Opt('\\') + Literal('/')))
-        regex_token = QuotedString('/', escChar='\\')
+        regex_token = QuotedString('/', escChar='\\', multiline=True) | QuotedString('\\/', escChar='\\', multiline=True)
         regex_token.set_name("regex")
         regex_token.set_parse_action(lambda string,position,token: RegexToken(position, col(position,string), lineno(position,string), token.as_list()[0]))
 
