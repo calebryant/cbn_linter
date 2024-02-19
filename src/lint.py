@@ -4,7 +4,7 @@
 import argparse
 from pyparsing import exceptions
 from Grammar import Grammar
-from AST import AST
+# from AST import AST
 from State import State
 
 def lint_cbn():
@@ -33,8 +33,9 @@ def lint_cbn():
             open_file = open(config_file)
             file_string = open_file.read()
             tokens = grammar.parse_string(file_string)
-            ast = AST(tokens)
-            the_state = ast.state
+            print(tokens)
+            # ast = AST(tokens)
+            # the_state = ast.state
         except exceptions.ParseSyntaxException as oopsie:
             print(oopsie.explain())
             exit(1)
@@ -61,8 +62,8 @@ def lint_cbn():
         # if output:
             # TODO
 
-        if the_state.errors != []:
-            exit(1)
+        # if the_state.errors != []:
+        #     exit(1)
 
     else:
         print("No config file provided... Exiting")

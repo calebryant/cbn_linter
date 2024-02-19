@@ -4,7 +4,6 @@
 # Description: Keeps track of the state of variables used in a parser
 
 from AST import *
-from Tokens import *
 import re
 
 class State:
