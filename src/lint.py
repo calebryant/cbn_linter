@@ -1,4 +1,4 @@
-# auther: caleb.bryant@cyderes.com
+# author: caleb.bryant@cyderes.com
 # created: 2023/04/02
 
 import argparse
