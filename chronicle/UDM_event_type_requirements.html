@@ -1,0 +1,831 @@
+<!DOCTYPE html>
+
+<h3 id="email_transaction" data-text="EMAIL_TRANSACTION" tabindex="-1" role="presentation"><span class="devsite-heading" role="heading" aria-level="3">EMAIL_<wbr>TRANSACTION</span><button type="button" class="devsite-heading-link button-flat material-icons" aria-label="Copy link to this section: EMAIL_TRANSACTION" data-title="Copy link to this section: EMAIL_TRANSACTION" data-id="email_transaction"></button></h3>
+
+<p>Required fields:</p>
+
+<ul>
+<li><strong>metadata</strong>: Include the required fields.</li>
+<li><strong>principal</strong>: Populate with information about the machine that the email
+message originated from. For example, the IP address of the sender.</li>
+</ul>
+
+<p>Optional fields:</p>
+
+<ul>
+<li><strong>about</strong>: URLs, IPs, domains, and any file attachments embedded in the
+email body.</li>
+<li><strong>securityResult.about</strong>: Bad URLs, IPs, and files embedded within the email
+body.</li>
+<li><strong>network.email</strong>: Email sender/recipient information.</li>
+<li><strong>principal</strong>: If there is client machine data on who sent the email,
+populate the server details in principal (for example, the client process,
+port numbers, username, etc.).</li>
+<li><strong>target</strong>: If there is destination email server data, populate the server
+details in target (for example, the IP address).</li>
+<li><strong>intermediary</strong>: If there is mail server data or mail proxy data, populate
+the server details in intermediary.</li>
+</ul>
+ 
+<p>Notes:</p>
+
+<ul>
+<li>Never populate <strong>principal.email</strong> or <strong>target.email</strong>.</li>
+<li>Only populate the email field in <strong>security_result.about</strong> or
+<strong>network.email</strong>.</li>
+<li>Top level security results generally have a noun set (optional for spam).</li>
+</ul>
+
+<h3 id="file" class="hide-from-toc" data-text="FILE_CREATION, FILE_DELETION, FILE_MODIFICATION, FILE_READ, and FILE_OPEN" tabindex="-1" role="presentation"><span class="devsite-heading" role="heading" aria-level="3">FILE_<wbr>CREATION,<wbr> FILE_<wbr>DELETION,<wbr> FILE_<wbr>MODIFICATION,<wbr> FILE_<wbr>READ,<wbr> and FILE_<wbr>OPEN</span><button type="button" class="devsite-heading-link button-flat material-icons" aria-label="Copy link to this section: FILE_CREATION, FILE_DELETION, FILE_MODIFICATION, FILE_READ, and FILE_OPEN" data-title="Copy link to this section: FILE_CREATION, FILE_DELETION, FILE_MODIFICATION, FILE_READ, and FILE_OPEN" data-id="file"></button></h3>
+
+<p>Required fields:</p>
+
+<ul>
+<li><strong>metadata</strong>: Include the required fields.</li>
+<li><strong>principal</strong>:
+<ul>
+<li>At least one machine identifier.</li>
+<li>(Optional) Populate principal.process with information about the process
+accessing the file.</li>
+</ul></li>
+<li><strong>target</strong>:
+<ul>
+<li>If the file is remote (for example SMB share), the target must include
+at least one machine identifier for the target machine, otherwise all
+machine identifiers must be blank.</li>
+<li>Populate target.file with information about the file.</li>
+</ul></li>
+</ul>
+
+<p>Optional:</p>
+
+<ul>
+<li><strong>security_result</strong>: Describe the malicious activity detected.</li>
+<li><strong>principal.user</strong>: Populate if user information is available about the
+process.</li>
+</ul>
+
+<h3 id="file_copy" data-text="FILE_COPY" tabindex="-1">FILE_<wbr>COPY</h3>
+
+<p>Required fields:</p>
+
+<ul>
+<li><strong>metadata</strong>: Include the required fields as described.</li>
+<li><strong>principal</strong>:
+<ul>
+<li>At least one machine identifier.</li>
+<li>(Optional) Populate <strong>principal.process</strong> with information about the
+process performing the file copy operation.</li>
+</ul></li>
+<li><strong>src</strong>:
+<ul>
+<li>Populate <strong>src.file</strong> with information about the source file.</li>
+<li>If the file is remote (for example SMB share), src must include at least
+one machine identifier for the source machine storing the source file.</li>
+</ul></li>
+<li><strong>target</strong>:
+<ul>
+<li>Populate <strong>target.file</strong> with information about the target file.</li>
+<li>If the file is remote (for example SMB share), the <strong>target</strong> field must
+include at least one machine identifier for the target machine that
+holds the target file.</li>
+</ul></li>
+</ul>
+
+<p>Optional fields:</p>
+
+<ul>
+<li><strong>security_result</strong>: Describe the malicious activity detected.</li>
+<li><strong>principal.user</strong>: Populate if user information is available about the
+process.</li>
+</ul>
+
+<h3 id="mutex_creation" data-text="MUTEX_CREATION" tabindex="-1">MUTEX_<wbr>CREATION</h3>
+
+<p>Required fields:</p>
+
+<ul>
+<li><strong>metadata</strong>: Include the required fields.</li>
+<li><strong>principal</strong>:
+<ul>
+<li>At least one machine identifier.</li>
+<li>Populate principal.process with information about the process creating
+the mutex.</li>
+</ul></li>
+<li><strong>target</strong>:
+<ul>
+<li>Populate <strong>target.resource</strong>.</li>
+<li>Populate <strong>target.resource.type</strong> with MUTEX.</li>
+<li>Populate <strong>target.resource.name</strong> with the name of the mutex created.</li>
+</ul></li>
+</ul>
+
+<p>Optional:</p>
+
+<ul>
+<li><strong>security_result</strong>: Describe the malicious activity detected.</li>
+<li><strong>principal.user</strong>: Populate if user information is available about the
+process.</li>
+</ul>
+
+<h5 id="udm_example_for_mutex_creation" data-text="UDM Example for MUTEX_CREATION" tabindex="-1">UDM Example for MUTEX_<wbr>CREATION</h5>
+
+<p>The following example illustrates how an event of type MUTEX_CREATION would be
+formatted for the Chronicle UDM:</p>
+<devsite-code data-copy-event-label=""><pre class="" translate="no" dir="ltr" is-upgraded=""><code translate="no" dir="ltr"><span class="pln">metadata </span><span class="pun">{</span><span class="pln"><br>&nbsp; event_timestamp</span><span class="pun">:</span><span class="pln"> </span><span class="str">"2020-01-01T13:27:41+00:00"</span><span class="pln"><br>&nbsp; event_type</span><span class="pun">:</span><span class="pln"> MUTEX_CREATION<br>&nbsp; vendor_name</span><span class="pun">:</span><span class="pln"> </span><span class="str">"Microsoft"</span><span class="pln"><br>&nbsp; product_name</span><span class="pun">:</span><span class="pln"> </span><span class="str">"Windows"</span><span class="pln"><br></span><span class="pun">}</span><span class="pln"><br>principal </span><span class="pun">{</span><span class="pln"><br>&nbsp; hostname</span><span class="pun">:</span><span class="pln"> </span><span class="str">"test.altostrat.com"</span><span class="pln"><br>&nbsp; process </span><span class="pun">{</span><span class="pln"><br>&nbsp; &nbsp; pid</span><span class="pun">:</span><span class="pln"> </span><span class="str">"0xc45"</span><span class="pln"><br>&nbsp; &nbsp; file </span><span class="pun">{</span><span class="pln"><br>&nbsp; &nbsp; &nbsp; full_path</span><span class="pun">:</span><span class="pln"> </span><span class="str">"C:\\Windows\\regedit.exe"</span><span class="pln"><br>&nbsp; &nbsp; </span><span class="pun">}</span><span class="pln"><br>&nbsp; </span><span class="pun">}</span><span class="pln"><br></span><span class="pun">}</span><span class="pln"><br>target </span><span class="pun">{</span><span class="pln"><br>&nbsp; resource </span><span class="pun">{</span><span class="pln"><br>&nbsp; &nbsp; type</span><span class="pun">:</span><span class="pln"> </span><span class="str">"MUTEX"</span><span class="pln"><br>&nbsp; &nbsp; name</span><span class="pun">:</span><span class="pln"> </span><span class="str">"test-mutex"</span><span class="pln"><br>&nbsp; </span><span class="pun">}</span><span class="pln"><br></span><span class="pun">}</span><span class="pln"><br></span></code></pre></devsite-code>
+<p>As shown in this example, the event has been divided into the following UDM
+categories:</p>
+
+<ul>
+<li>metadata: Background information about the event.</li>
+<li>principal: Device and process details.</li>
+<li>target: Information about the mutex.</li>
+</ul>
+
+<h3 id="network_connection" data-text="NETWORK_CONNECTION" tabindex="-1">NETWORK_<wbr>CONNECTION</h3>
+
+<p>Required fields:</p>
+
+<ul>
+<li><strong>metadata</strong>: event_timestamp</li>
+<li><strong>principal</strong>: Include detail about the machine that initiated the network
+connection (for example, source).</li>
+<li><strong>target</strong>: Include details about the target machine if different from the
+principal machine.</li>
+<li><strong>network</strong>: Capture details about the network connection (ports, protocol,
+etc.).</li>
+</ul>
+
+<p>Optional fields:</p>
+
+<ul>
+<li><strong>principal.process</strong> and <strong>target.process</strong>: Include process information
+associated with the principal and target of the network connection (if
+available).</li>
+<li><strong>principal.user</strong> and <strong>target.user</strong>: Include user information associated
+with the principal and target of the network connection (if available).</li>
+</ul>
+<aside class="note"><strong>Note:</strong><span> For all network events, if the principal or target has a port specified,
+the <strong>ip</strong> and <strong>mac</strong> fields must include only one value each (if available),
+that is the IP address and MAC associated with the port. Otherwise, if no port
+is specified, you can specify any number of IPs and MACs associated with the
+device at the time of the event (no particular order is required).</span></aside>
+<h3 id="network_http" data-text="NETWORK_HTTP" tabindex="-1">NETWORK_<wbr>HTTP</h3>
+
+<p>The NETWORK_HTTP event type represents an HTTP network connection from a principal to a
+target web server.</p>
+
+<p>Required fields:</p>
+
+<ul>
+<li><strong>metadata</strong>: Include the required fields.</li>
+<li><strong>principal</strong>: Represents the client initiating the web request and includes
+at least one machine identifier (for example, hostname, IP, MAC, proprietary
+asset identifier) or a user identifier (for example, username). If a
+specific network connection is described and a client port number is
+available, only one IP address must be specified along with the port number
+associated with that network connection (although other machine identifiers
+could be provided to better describe the participant device). If no source
+port is available, any and all IP and MAC addresses, asset identifiers, and
+hostname values describing the principal device could be specified.</li>
+<li><strong>target</strong>: Represents the web server, and includes device information and
+optionally a port number. If a target port number is available, specify only
+one IP address in addition to the port number associated with that network
+connection (although multiple other machine identifiers could be provided
+for the target). For target.url, populate with the URL accessed.</li>
+<li><strong>network</strong> and <strong>network.http</strong>: Includes details on the HTTP network
+connection. You must populate the following fields:
+<ul>
+<li>network.ip_protocol</li>
+<li>network.application_protocol</li>
+<li>network.http.method</li>
+</ul></li>
+</ul>
+
+<p>Optional fields:</p>
+
+<ul>
+<li><strong>about</strong>: Represents other entities found in the HTTP transaction (for
+example, an uploaded or downloaded file).</li>
+<li><strong>intermediary</strong>: Represents a proxy server (if different from the principal
+or target).</li>
+<li><strong>metadata</strong>: Populate the other metadata fields.</li>
+<li><strong>network</strong>: Populate other network fields.</li>
+<li><strong>network.email</strong>: If the HTTP network connection originated from a URL
+which appeared in an email message, populate network.email with the details.</li>
+<li><strong>observer</strong>: Represents a passive sniffer (if present).</li>
+<li><strong>security_result</strong>: Add one or more items to the security_result field to
+represent the malicious activity detected.</li>
+</ul>
+
+<h5 id="udm_example_for_network_http" data-text="UDM Example for NETWORK_HTTP" tabindex="-1">UDM Example for NETWORK_<wbr>HTTP</h5>
+
+<p>The following example illustrates how a Sophos antivirus event of type
+NETWORK_HTTP would be converted to the Chronicle UDM format.</p>
+
+<p>The following is the original Sophos antivirus event:</p>
+<devsite-code data-copy-event-label=""><pre class="" translate="no" dir="ltr" is-upgraded=""><code translate="no" dir="ltr"><span class="pln">date</span><span class="pun">=</span><span class="lit">2013</span><span class="pun">-</span><span class="lit">08</span><span class="pun">-</span><span class="lit">07</span><span class="pln"> time</span><span class="pun">=</span><span class="lit">13</span><span class="pun">:</span><span class="lit">27</span><span class="pun">:</span><span class="lit">41</span><span class="pln"> timezone</span><span class="pun">=</span><span class="str">"GMT"</span><span class="pln"> device_name</span><span class="pun">=</span><span class="str">"CC500ia"</span><span class="pln"> device_id</span><span class="pun">=</span><span class="pln"> C070123456</span><span class="pun">-</span><span class="pln">ABCDE log_id</span><span class="pun">=</span><span class="lit">030906208001</span><span class="pln"> log_type</span><span class="pun">=</span><span class="str">"Anti-Virus"</span><span class="pln"> log_component</span><span class="pun">=</span><span class="str">"HTTP"</span><span class="pln"> log_subtype</span><span class="pun">=</span><span class="str">"Virus"</span><span class="pln"> status</span><span class="pun">=</span><span class="str">""</span><span class="pln"> priority</span><span class="pun">=</span><span class="typ">Critical</span><span class="pln"> fw_rule_id</span><span class="pun">=</span><span class="lit">0</span><span class="pln"> user_name</span><span class="pun">=</span><span class="str">"john.smith"</span><span class="pln"> iap</span><span class="pun">=</span><span class="lit">7</span><span class="pln"> av_policy_name</span><span class="pun">=</span><span class="str">""</span><span class="pln"> virus</span><span class="pun">=</span><span class="str">"TR/ElderadoB.A.78"</span><span class="pln"> url</span><span class="pun">=</span><span class="str">"altostrat.fr/img/logo.gif"</span><span class="pln"> domainname</span><span class="pun">=</span><span class="str">"altostrat.fr"</span><span class="pln"> src_ip</span><span class="pun">=</span><span class="lit">10.10</span><span class="pun">.</span><span class="lit">2.10</span><span class="pln"> src_port</span><span class="pun">=</span><span class="lit">60671</span><span class="pln"> src_country_code</span><span class="pun">=</span><span class="pln"> dst_ip</span><span class="pun">=</span><span class="lit">203.0</span><span class="pun">.</span><span class="lit">113.31</span><span class="pln"> dst_port</span><span class="pun">=</span><span class="lit">80</span><span class="pln"> dst_country_code</span><span class="pun">=</span><span class="pln">FRA<br></span></code></pre></devsite-code>
+<p>Here is how you would format the same information in Proto3 using the Chronicle
+UDM syntax:</p>
+<devsite-code data-copy-event-label=""><pre class="" translate="no" dir="ltr" is-upgraded=""><code translate="no" dir="ltr"><span class="pln">metadata </span><span class="pun">{</span><span class="pln"><br>&nbsp; event_timestamp</span><span class="pun">:</span><span class="pln"> </span><span class="str">"2013-08-07T13:27:41+00:00"</span><span class="pln"><br>&nbsp; event_type</span><span class="pun">:</span><span class="pln"> NETWORK_HTTP<br>&nbsp; product_name</span><span class="pun">:</span><span class="pln"> </span><span class="str">"Sophos Antivirus"</span><span class="pln"><br>&nbsp; product_log_id</span><span class="pun">:</span><span class="pln"> </span><span class="str">"030906208001"</span><span class="pln"><br></span><span class="pun">}</span><span class="pln"><br><br>principal </span><span class="pun">{</span><span class="pln"><br>&nbsp; hostname</span><span class="pun">:</span><span class="pln"> </span><span class="str">"CC500ia"</span><span class="pln"><br>&nbsp; asset_id</span><span class="pun">:</span><span class="pln"> </span><span class="str">"Sophos.AV:C070123456-ABCDE"</span><span class="pln"><br>&nbsp; ip</span><span class="pun">:</span><span class="pln"> </span><span class="str">"10.10.2.10"</span><span class="pln"><br>&nbsp; port</span><span class="pun">:</span><span class="pln"> </span><span class="lit">60671</span><span class="pln"><br>&nbsp; user </span><span class="pun">{</span><span class="pln"> &nbsp;userid</span><span class="pun">:</span><span class="pln"> </span><span class="str">"john.smith"</span><span class="pln"> </span><span class="pun">}</span><span class="pln"><br></span><span class="pun">}</span><span class="pln"><br><br>target </span><span class="pun">{</span><span class="pln"><br>&nbsp; hostname</span><span class="pun">:</span><span class="pln"> </span><span class="str">"altostrat.fr"</span><span class="pln"><br>&nbsp; ip</span><span class="pun">:</span><span class="pln"> </span><span class="str">"203.0.113.31"</span><span class="pln"><br>&nbsp; port</span><span class="pun">:</span><span class="pln"> </span><span class="lit">80</span><span class="pln"><br>&nbsp; url</span><span class="pun">:</span><span class="pln"> </span><span class="str">"altostrat.fr/img/logo.gif"</span><span class="pln"><br></span><span class="pun">}</span><span class="pln"><br><br>network </span><span class="pun">{</span><span class="pln"><br>&nbsp; ip_protocol</span><span class="pun">:</span><span class="pln"> TCP<br>&nbsp;</span><span class="pun">}</span><span class="pln"><br><br>security_result </span><span class="pun">{</span><span class="pln"><br>&nbsp; about </span><span class="pun">{</span><span class="pln"><br>&nbsp; &nbsp; url</span><span class="pun">:</span><span class="pln"> </span><span class="str">"altostrat.fr/img/logo.gif"</span><span class="pln"><br>&nbsp; &nbsp; category</span><span class="pun">:</span><span class="pln"> SOFTWARE_MALICIOUS<br>&nbsp; &nbsp; category_details</span><span class="pun">:</span><span class="pln"> </span><span class="str">"Virus"</span><span class="pln"><br>&nbsp; &nbsp; threat_name</span><span class="pun">:</span><span class="pln"> </span><span class="str">"TR/ElderadoB.A.78"</span><span class="pln"><br>&nbsp; &nbsp; severity</span><span class="pun">:</span><span class="pln"> HIGH &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </span><span class="com"># Chronicle-normalized severity</span><span class="pln"><br>&nbsp; &nbsp; severity_details</span><span class="pun">:</span><span class="pln"> </span><span class="str">"Critical"</span><span class="pln"> &nbsp; &nbsp;</span><span class="com"># Vendor-specific severity string</span><span class="pln"><br>&nbsp; </span><span class="pun">}</span><span class="pln"><br></span><span class="pun">}</span><span class="pln"><br><br>additional </span><span class="pun">{</span><span class="pln"> </span><span class="str">"dst_country_code"</span><span class="pln"> </span><span class="pun">:</span><span class="pln"> </span><span class="str">"FRA"</span><span class="pun">,</span><span class="pln"> </span><span class="str">"iap"</span><span class="pln"> </span><span class="pun">:</span><span class="pln"> </span><span class="str">"7"</span><span class="pln"> </span><span class="str">"fw_rule_id"</span><span class="pln"> </span><span class="pun">:</span><span class="pln"> </span><span class="str">"0"</span><span class="pln"> </span><span class="pun">}</span><span class="pln"><br></span></code></pre></devsite-code>
+<p>As shown in this example, the event has been divided into the following UDM
+categories:</p>
+
+<ul>
+<li>metadata: Background information about the event.</li>
+<li>principal: Security device which detected the event.</li>
+<li>target: Device which received the malicious software.</li>
+<li>network: Network information about the malicious host.</li>
+<li>security_result: Security details about the malicious software.</li>
+<li>additional: Vendor information currently outside the scope of the UDM.</li>
+</ul>
+
+<h3 id="process_" data-text="PROCESS_INJECTION, PROCESS_LAUNCH, PROCESS_OPEN, PROCESS_TERMINATION, PROCESS_UNCATEGORIZED" tabindex="-1">PROCESS_<wbr>INJECTION,<wbr> PROCESS_<wbr>LAUNCH,<wbr> PROCESS_<wbr>OPEN,<wbr> PROCESS_<wbr>TERMINATION,<wbr> PROCESS_<wbr>UNCATEGORIZED</h3>
+
+<p>Required fields:</p>
+
+<ul>
+<li><strong>metadata</strong>: Include the required fields.</li>
+<li><strong>principal</strong>:
+<ul>
+<li>At least one machine identifier.</li>
+<li>For process injection and process termination events, if available,
+<strong>principal.process</strong> must include information about the process
+initiating the action (for example, for a process launch event,
+<strong>principal.process</strong> must include details about the parent process if
+available).</li>
+</ul></li>
+<li><strong>target</strong>:
+<ul>
+<li><strong>target.process</strong>: Includes information about the process that is being
+injected, opened, launched, or terminated.</li>
+<li>If the target process is remote, target must include at least one
+machine identifier for the target machine (for example, an IP address,
+MAC, hostname, or third-party asset identifier).</li>
+</ul></li>
+</ul>
+
+<p>Optional fields:</p>
+
+<ul>
+<li><strong>security_result</strong>: Describe the malicious activity detected.</li>
+<li><strong>principal.user</strong> and <strong>target.user</strong>: Populate the initiating process
+(principal) and the target process if the user information is available.</li>
+</ul>
+
+<h5 id="udm_example_for_process_launch" data-text="UDM Example for PROCESS_LAUNCH" tabindex="-1">UDM Example for PROCESS_<wbr>LAUNCH</h5>
+
+<p>The following example illustrates how you would format a PROCESS_LAUNCH event
+using the Chronicle UDM syntax:</p>
+<devsite-code data-copy-event-label=""><pre class="" translate="no" dir="ltr" is-upgraded=""><code translate="no" dir="ltr"><span class="pln">metadata </span><span class="pun">{</span><span class="pln"><br>&nbsp; event_timestamp</span><span class="pun">:</span><span class="pln"> </span><span class="str">"2020-01-01T13:27:41+00:00"</span><span class="pln"><br>&nbsp; event_type</span><span class="pun">:</span><span class="pln"> PROCESS_LAUNCH<br>&nbsp; vendor_name</span><span class="pun">:</span><span class="pln"> </span><span class="str">"Microsoft"</span><span class="pln"><br>&nbsp; product_name</span><span class="pun">:</span><span class="pln"> </span><span class="str">"Windows"</span><span class="pln"><br></span><span class="pun">}</span><span class="pln"><br>principal </span><span class="pun">{</span><span class="pln"><br>&nbsp; hostname</span><span class="pun">:</span><span class="pln"> </span><span class="str">"altostrat.com"</span><span class="pln"><br></span><span class="pun">}</span><span class="pln"><br>target </span><span class="pun">{</span><span class="pln"><br>&nbsp; process </span><span class="pun">{</span><span class="pln"><br>&nbsp; &nbsp; pid</span><span class="pun">:</span><span class="pln"> </span><span class="str">"0xc45"</span><span class="pln"><br>&nbsp; &nbsp; file </span><span class="pun">{</span><span class="pln"><br>&nbsp; &nbsp; &nbsp; full_path</span><span class="pun">:</span><span class="pln"> </span><span class="str">"C:\\Windows\\regedit.exe"</span><span class="pln"><br>&nbsp; &nbsp; </span><span class="pun">}</span><span class="pln"><br>&nbsp; </span><span class="pun">}</span><span class="pln"><br></span><span class="pun">}</span><span class="pln"><br></span></code></pre></devsite-code>
+<p>As shown in this example, the event has been divided into the following UDM
+categories:</p>
+
+<ul>
+<li>metadata: Background information about the event.</li>
+<li>principal: Device details.</li>
+<li>target: Process details.</li>
+</ul>
+
+<h3 id="process_module_load" data-text="PROCESS_MODULE_LOAD" tabindex="-1">PROCESS_<wbr>MODULE_<wbr>LOAD</h3>
+
+<p>Required fields:</p>
+
+<ul>
+<li><strong>metadata</strong>: Include the required fields.</li>
+<li><strong>principal</strong>:
+<ul>
+<li>At least one machine identifier.</li>
+<li>principal.process: Process loading the module.</li>
+</ul></li>
+<li><strong>target</strong>:
+<ul>
+<li>target.process: Includes information about the process.</li>
+<li>target.process.file: Module loaded (for example, the DLL or shared
+object).</li>
+</ul></li>
+</ul>
+
+<p>Optional fields:</p>
+
+<ul>
+<li><strong>security_result</strong>: Describe the malicious activity detected.</li>
+<li><strong>principal.user</strong>: Populate if user information is available about the
+process.</li>
+</ul>
+
+<h5 id="udm_example_for_process_module_load" data-text="UDM Example for PROCESS_MODULE_LOAD" tabindex="-1">UDM Example for PROCESS_<wbr>MODULE_<wbr>LOAD</h5>
+
+<p>The following example illustrates how you would format a PROCESS_MODULE_LOAD
+event using the Chronicle UDM syntax:</p>
+<devsite-code data-copy-event-label=""><pre class="" translate="no" dir="ltr" is-upgraded=""><code translate="no" dir="ltr"><span class="pln">metadata </span><span class="pun">{</span><span class="pln"><br>&nbsp; event_timestamp</span><span class="pun">:</span><span class="pln"> </span><span class="str">"2020-01-01T13:27:41+00:00"</span><span class="pln"><br>&nbsp; event_type</span><span class="pun">:</span><span class="pln"> PROCESS_MODULE_LOAD<br>&nbsp; vendor_name</span><span class="pun">:</span><span class="pln"> </span><span class="str">"Microsoft"</span><span class="pln"><br>&nbsp; product_name</span><span class="pun">:</span><span class="pln"> </span><span class="str">"Windows"</span><span class="pln"><br></span><span class="pun">}</span><span class="pln"><br>principal </span><span class="pun">{</span><span class="pln"><br>&nbsp; hostname</span><span class="pun">:</span><span class="pln"> </span><span class="str">"example.com"</span><span class="pln"><br>&nbsp; process </span><span class="pun">{</span><span class="pln"><br>&nbsp; &nbsp; pid</span><span class="pun">:</span><span class="pln"> </span><span class="str">"0x123"</span><span class="pln"><br>&nbsp; </span><span class="pun">}</span><span class="pln"><br></span><span class="pun">}</span><span class="pln"><br>target </span><span class="pun">{</span><span class="pln"><br>&nbsp; process </span><span class="pun">{</span><span class="pln"><br>&nbsp; &nbsp; pid</span><span class="pun">:</span><span class="pln"> </span><span class="str">"0xc45"</span><span class="pln"><br>&nbsp; &nbsp; file </span><span class="pun">{</span><span class="pln"><br>&nbsp; &nbsp; &nbsp; full_path</span><span class="pun">:</span><span class="pln"> </span><span class="str">"C:\\Windows\\regedit.exe"</span><span class="pln"><br>&nbsp; &nbsp; </span><span class="pun">}</span><span class="pln"><br>&nbsp; </span><span class="pun">}</span><span class="pln"><br></span><span class="pun">}</span><span class="pln"><br></span></code></pre></devsite-code>
+<p>As shown in this example, the event has been divided into the following UDM
+categories:</p>
+
+<ul>
+<li>metadata: Background information about the event.</li>
+<li>principal: Details about the device and the process loading the module.</li>
+<li>target: Process and module details.</li>
+</ul>
+
+<h3 id="process_pe" data-text="PROCESS_PRIVILEGE_ESCALATION" tabindex="-1">PROCESS_<wbr>PRIVILEGE_<wbr>ESCALATION</h3>
+
+<p>Required fields:</p>
+
+<ul>
+<li><strong>metadata</strong>: Include the required fields.</li>
+<li><strong>principal</strong>:
+<ul>
+<li>At least one machine identifier.</li>
+<li>principal.process: Process loading the module.</li>
+<li>principal.user: User loading the module.</li>
+</ul></li>
+</ul>
+
+<p>Optional fields:</p>
+
+<ul>
+<li><strong>security_result</strong>: Describe the malicious activity detected.</li>
+</ul>
+
+<h5 id="udm_example_for_process_privilege_escalation" data-text="UDM Example for PROCESS_PRIVILEGE_ESCALATION" tabindex="-1">UDM Example for PROCESS_<wbr>PRIVILEGE_<wbr>ESCALATION</h5>
+
+<p>The following example illustrates how you would format a
+PROCESS_PRIVILEGE_ESCALATION event using the Chronicle UDM syntax:</p>
+<devsite-code data-copy-event-label=""><pre class="" translate="no" dir="ltr" is-upgraded=""><code translate="no" dir="ltr"><span class="pln">metadata </span><span class="pun">{</span><span class="pln"><br>&nbsp; event_timestamp</span><span class="pun">:</span><span class="pln"> </span><span class="str">"2020-01-01T13:27:41+00:00"</span><span class="pln"><br>&nbsp; event_type</span><span class="pun">:</span><span class="pln"> PROCESS_PRIVILEGE_ESCALATION<br>&nbsp; vendor_name</span><span class="pun">:</span><span class="pln"> </span><span class="str">"Microsoft"</span><span class="pln"><br>&nbsp; product_name</span><span class="pun">:</span><span class="pln"> </span><span class="str">"Windows"</span><span class="pln"><br></span><span class="pun">}</span><span class="pln"><br>principal </span><span class="pun">{</span><span class="pln"><br>&nbsp; hostname</span><span class="pun">:</span><span class="pln"> </span><span class="str">"example.com"</span><span class="pln"><br>&nbsp; process </span><span class="pun">{</span><span class="pln"><br>&nbsp; &nbsp; pid</span><span class="pun">:</span><span class="pln"> </span><span class="str">"0x123"</span><span class="pln"><br>&nbsp; </span><span class="pun">}</span><span class="pln"><br>&nbsp; user </span><span class="pun">{</span><span class="pln"><br>&nbsp; &nbsp; userid</span><span class="pun">:</span><span class="pln"> </span><span class="str">"test"</span><span class="pln"><br>&nbsp; &nbsp; windows_sid</span><span class="pun">:</span><span class="pln"> </span><span class="str">"ABCDEFGH-123456789-1111111-1000"</span><span class="pln"><br>&nbsp; </span><span class="pun">}</span><span class="pln"><br></span><span class="pun">}</span><span class="pln"><br>target </span><span class="pun">{</span><span class="pln"><br>&nbsp; process </span><span class="pun">{</span><span class="pln"><br>&nbsp; &nbsp; pid</span><span class="pun">:</span><span class="pln"> </span><span class="str">"0xc45"</span><span class="pln"><br>&nbsp; &nbsp; file </span><span class="pun">{</span><span class="pln"><br>&nbsp; &nbsp; &nbsp; full_path</span><span class="pun">:</span><span class="pln"> </span><span class="str">"C:\\Windows\\regedit.exe"</span><span class="pln"><br>&nbsp; &nbsp; </span><span class="pun">}</span><span class="pln"><br>&nbsp; </span><span class="pun">}</span><span class="pln"><br></span><span class="pun">}</span><span class="pln"><br></span></code></pre></devsite-code>
+<p>As shown in this example, the event has been divided into the following UDM
+categories:</p>
+
+<ul>
+<li>metadata: Background information about the event.</li>
+<li>principal: Details about the device, the user, and the process loading the
+module.</li>
+<li>target: Process and module details.</li>
+</ul>
+
+<h3 id="registry_" data-text="REGISTRY_CREATION, REGISTRY_MODIFICATION, REGISTRY_DELETION" tabindex="-1">REGISTRY_<wbr>CREATION,<wbr> REGISTRY_<wbr>MODIFICATION,<wbr> REGISTRY_<wbr>DELETION</h3>
+
+<p>Required fields:</p>
+
+<ul>
+<li><strong>metadata</strong>: Include the required fields.</li>
+<li><strong>principal</strong>:
+<ul>
+<li>At least one machine identifier.</li>
+<li>If a user-mode process performs the registry modification,
+<strong>principal.process</strong> must include information about the process
+modifying the registry.</li>
+<li>If a kernel process performs the registry modification, the
+<strong>principal</strong> must not include process information.</li>
+</ul></li>
+<li><strong>target</strong>:
+<ul>
+<li><strong>target.registry</strong>: If the target registry is remote, target must
+include at least one identifier for the target machine (for example, an
+IP address, MAC, hostname, or third party asset identifier).</li>
+<li><strong>target.registry.registry_key</strong>: All registry events must include the
+affected registry key.</li>
+</ul></li>
+</ul>
+
+<p>Optional:</p>
+
+<ul>
+<li><strong>security_result:</strong> Describe the malicious activity detected. For example,
+a bad registry key.</li>
+<li><strong>principal.user:</strong> Populate if user information is available about the
+process.</li>
+</ul>
+
+<h5 id="udm_example_for_registry_modification" data-text="UDM Example for REGISTRY_MODIFICATION" tabindex="-1">UDM Example for REGISTRY_<wbr>MODIFICATION</h5>
+
+<p>The following example illustrates how you would format a REGISTRY_MODIFICATION
+event in Proto3 using the Chronicle UDM syntax:</p>
+<devsite-code data-copy-event-label=""><pre class="" translate="no" dir="ltr" is-upgraded=""><code translate="no" dir="ltr"><span class="pln">metadata </span><span class="pun">{</span><span class="pln"><br>&nbsp; event_timestamp</span><span class="pun">:</span><span class="pln"> </span><span class="str">"2020-01-01T13:27:41+00:00"</span><span class="pln"><br>&nbsp; event_type</span><span class="pun">:</span><span class="pln"> REGISTRY_MODIFICATION<br>&nbsp; vendor_name</span><span class="pun">:</span><span class="pln"> </span><span class="str">"Microsoft"</span><span class="pln"><br>&nbsp; product_name</span><span class="pun">:</span><span class="pln"> </span><span class="str">"Windows"</span><span class="pln"><br></span><span class="pun">}</span><span class="pln"><br>principal </span><span class="pun">{</span><span class="pln"><br>&nbsp; hostname</span><span class="pun">:</span><span class="pln"> </span><span class="str">"test-win"</span><span class="pln"><br>&nbsp; user </span><span class="pun">{</span><span class="pln"><br>&nbsp; &nbsp; userid</span><span class="pun">:</span><span class="pln"> </span><span class="str">"test"</span><span class="pln"><br>&nbsp; &nbsp; windows_sid</span><span class="pun">:</span><span class="pln"> </span><span class="str">"ABCDEFGH-123456789-1111111-1000"</span><span class="pln"><br>&nbsp; </span><span class="pun">}</span><span class="pln"><br>&nbsp; process </span><span class="pun">{</span><span class="pln"><br>&nbsp; &nbsp; pid</span><span class="pun">:</span><span class="pln"> </span><span class="str">"0xc45"</span><span class="pln"><br>&nbsp; &nbsp; file </span><span class="pun">{</span><span class="pln"><br>&nbsp; &nbsp; &nbsp; full_path</span><span class="pun">:</span><span class="pln"> </span><span class="str">"C:\\Windows\\regedit.exe"</span><span class="pln"><br>&nbsp; &nbsp; </span><span class="pun">}</span><span class="pln"><br>&nbsp; </span><span class="pun">}</span><span class="pln"><br></span><span class="pun">}</span><span class="pln"><br>target </span><span class="pun">{</span><span class="pln"><br>&nbsp; registry </span><span class="pun">{</span><span class="pln"><br>&nbsp; &nbsp; registry_key</span><span class="pun">:</span><span class="pln"> </span><span class="str">"\\REGISTRY\\USER\\TEST_USER\\Control Panel\\PowerCfg\\PowerPolicy"</span><span class="pln"><br>&nbsp; &nbsp; registry_value_name</span><span class="pun">:</span><span class="pln"> </span><span class="str">"Description"</span><span class="pln"><br>&nbsp; &nbsp; registry_value_data</span><span class="pun">:</span><span class="pln"> </span><span class="str">"For extending battery life."</span><span class="pln"><br>&nbsp; </span><span class="pun">}</span><span class="pln"><br></span><span class="pun">}</span><span class="pln"><br></span></code></pre></devsite-code>
+<p>As shown in this example, the event has been divided into the following UDM
+categories:</p>
+
+<ul>
+<li>metadata: Background information about the event.</li>
+<li>principal: Device, user, and process details.</li>
+<li>target: Registry entry affected by the modification.</li>
+</ul>
+
+<h3 id="scan_" data-text="SCAN_FILE, SCAN_HOST, SCAN_PROCESS, SCAN_VULN_HOST, SCAN_VULN_NETWORK" tabindex="-1">SCAN_<wbr>FILE,<wbr> SCAN_<wbr>HOST,<wbr> SCAN_<wbr>PROCESS,<wbr> SCAN_<wbr>VULN_<wbr>HOST,<wbr> SCAN_<wbr>VULN_<wbr>NETWORK</h3>
+
+<p>Required fields:</p>
+
+<ul>
+<li><strong>extensions</strong>: For SCAN_VULN_HOST and SCAN_VULN_NETWORK, define the
+vulnerability using the extensions.vuln field.</li>
+<li><strong>metadata</strong>: event_timestamp</li>
+<li><strong>observer</strong>: Capture information about the scanner itself. If the scanner
+is remote, the machine details must be captured by the observer field. For a
+local scanner, leave empty.</li>
+<li><strong>target</strong>: Capture information about the machine that holds the object
+being scanned. If a file is being scanned, target.file must capture
+information about the scanned file. If a process is being scanned,
+target.process must capture information about the scanned process.</li>
+</ul>
+
+<p>Optional fields:</p>
+
+<ul>
+<li><strong>target</strong>: User detail about the target object (for example, file creator
+or process owner) should be captured in target.user.</li>
+<li><strong>security_result</strong>: Describe the malicious activity detected.</li>
+</ul>
+
+<h5 id="udm_example_for_scan_host" data-text="UDM Example for SCAN_HOST" tabindex="-1">UDM Example for SCAN_<wbr>HOST</h5>
+
+<p>The following example illustrates how an event of type SCAN_HOST would be
+formatted for the Chronicle UDM:</p>
+<devsite-code data-copy-event-label=""><pre class="" translate="no" dir="ltr" is-upgraded=""><code translate="no" dir="ltr"><span class="pln">metadata</span><span class="pun">:</span><span class="pln"> </span><span class="pun">{</span><span class="pln"><br>&nbsp; event_timestamp</span><span class="pun">:</span><span class="pln"> </span><span class="pun">{</span><span class="pln"><br>&nbsp; &nbsp; seconds</span><span class="pun">:</span><span class="pln"> </span><span class="lit">1571386978</span><span class="pln"><br>&nbsp; </span><span class="pun">}</span><span class="pln"><br>&nbsp; event_type</span><span class="pun">:</span><span class="pln"> SCAN_HOST<br>&nbsp; vendor_name</span><span class="pun">:</span><span class="pln"> </span><span class="str">"vendor"</span><span class="pln"><br>&nbsp; product_name</span><span class="pun">:</span><span class="pln"> </span><span class="str">"product"</span><span class="pln"><br>&nbsp; product_version</span><span class="pun">:</span><span class="pln"> </span><span class="str">"1.0"</span><span class="pln"><br></span><span class="pun">}</span><span class="pln"><br>target</span><span class="pun">:</span><span class="pln"> </span><span class="pun">{</span><span class="pln"><br>&nbsp; hostname</span><span class="pun">:</span><span class="pln"> </span><span class="str">"testHost"</span><span class="pln"><br>&nbsp; asset_id</span><span class="pun">:</span><span class="pln"> </span><span class="str">"asset"</span><span class="pln"><br>&nbsp; ip</span><span class="pun">:</span><span class="pln"> </span><span class="str">"192.168.200.200"</span><span class="pln"><br></span><span class="pun">}</span><span class="pln"><br>observer</span><span class="pun">:</span><span class="pln"> </span><span class="pun">{</span><span class="pln"><br>&nbsp; hostname</span><span class="pun">:</span><span class="pln"> </span><span class="str">"testObserver"</span><span class="pln"><br>&nbsp; ip</span><span class="pun">:</span><span class="pln"> </span><span class="str">"192.168.100.100"</span><span class="pln"><br></span><span class="pun">}</span><span class="pln"><br>security_result</span><span class="pun">:</span><span class="pln"> </span><span class="pun">{</span><span class="pln"><br>&nbsp; severity</span><span class="pun">:</span><span class="pln"> LOW<br>&nbsp; confidence</span><span class="pun">:</span><span class="pln"> HIGH_CONFIDENCE<br></span><span class="pun">}</span><span class="pln"><br></span></code></pre></devsite-code>
+<p>As shown in this example, the event has been divided into the following UDM
+categories:</p>
+
+<ul>
+<li>metadata: Background information about the event.</li>
+<li>target: Device which received the malicious software.</li>
+<li>observer: Device which observes and reports on the event in question.</li>
+<li>security_result: Security details about the malicious software.</li>
+</ul>
+
+<h3 id="scheduled_" data-text="SCHEDULED_TASK_CREATION, SCHEDULED_TASK_DELETION, SCHEDULED_TASK_DISABLE, SCHEDULED_TASK_ENABLE, SCHEDULED_TASK_MODIFICATION, SCHEDULED_TASK_UNCATEGORIZED" tabindex="-1">SCHEDULED_<wbr>TASK_<wbr>CREATION,<wbr> SCHEDULED_<wbr>TASK_<wbr>DELETION,<wbr> SCHEDULED_<wbr>TASK_<wbr>DISABLE,<wbr> SCHEDULED_<wbr>TASK_<wbr>ENABLE,<wbr> SCHEDULED_<wbr>TASK_<wbr>MODIFICATION,<wbr> SCHEDULED_<wbr>TASK_<wbr>UNCATEGORIZED</h3>
+
+<p>Required fields:</p>
+
+<ul>
+<li><strong>principal</strong>: For all SCHEDULED_TASK events, principal must include a
+machine identifier and a user identifier.</li>
+<li><strong>target</strong>: Target must include a valid resource and a resource type defined
+as "TASK".</li>
+</ul>
+
+<p>Optional fields:</p>
+
+<ul>
+<li><strong>security_result</strong>: Describe the malicious activity detected.</li>
+</ul>
+
+<h5 id="udm_example_for_scheduled_task_creation" data-text="UDM Example for SCHEDULED_TASK_CREATION" tabindex="-1">UDM Example for SCHEDULED_<wbr>TASK_<wbr>CREATION</h5>
+
+<p>The following example illustrates how an event of type SCHEDULED_TASK_CREATION
+could be formatted for the Chronicle UDM:</p>
+<devsite-code data-copy-event-label=""><pre class="" translate="no" dir="ltr" is-upgraded=""><code translate="no" dir="ltr"><span class="pln">metadata</span><span class="pun">:</span><span class="pln"> </span><span class="pun">{</span><span class="pln"><br>&nbsp; event_timestamp</span><span class="pun">:</span><span class="pln"> </span><span class="pun">{</span><span class="pln"><br>&nbsp; &nbsp; seconds</span><span class="pun">:</span><span class="pln"> </span><span class="lit">1577577998</span><span class="pln"><br>&nbsp; </span><span class="pun">}</span><span class="pln"><br>&nbsp; event_type</span><span class="pun">:</span><span class="pln"> SCHEDULED_TASK_CREATION<br>&nbsp; vendor_name</span><span class="pun">:</span><span class="pln"> </span><span class="str">"Microsoft"</span><span class="pln"><br>&nbsp; product_name</span><span class="pun">:</span><span class="pln"> </span><span class="str">"Windows"</span><span class="pln"><br></span><span class="pun">}</span><span class="pln"><br>principal</span><span class="pun">:</span><span class="pln"> </span><span class="pun">{</span><span class="pln"><br>&nbsp; hostname</span><span class="pun">:</span><span class="pln"> </span><span class="str">"fake-host.altostrat.com"</span><span class="pln"><br>&nbsp; user</span><span class="pun">:</span><span class="pln"> </span><span class="pun">{</span><span class="pln"><br>&nbsp; &nbsp; userid</span><span class="pun">:</span><span class="pln"> </span><span class="str">"TestUser"</span><span class="pln"><br>&nbsp; &nbsp; windows_sid</span><span class="pun">:</span><span class="pln"> </span><span class="str">"AB123CDE"</span><span class="pln"><br>&nbsp; </span><span class="pun">}</span><span class="pln"><br>&nbsp; process </span><span class="pun">{</span><span class="pln"><br>&nbsp; &nbsp; pid</span><span class="pun">:</span><span class="pln"> </span><span class="str">"1234"</span><span class="pln"><br>&nbsp; </span><span class="pun">}</span><span class="pln"><br></span><span class="pun">}</span><span class="pln"><br>target</span><span class="pun">:</span><span class="pln"> </span><span class="pun">{</span><span class="pln"><br>&nbsp; resource</span><span class="pun">:</span><span class="pln"> </span><span class="pun">{</span><span class="pln"><br>&nbsp; &nbsp; type</span><span class="pun">:</span><span class="pln"> </span><span class="str">"TASK"</span><span class="pln"><br>&nbsp; &nbsp; name</span><span class="pun">:</span><span class="pln"> </span><span class="str">"\\Adobe Acrobat Update Task"</span><span class="pln"><br>&nbsp; </span><span class="pun">}</span><span class="pln"><br></span><span class="pun">}</span><span class="pln"><br>intermediary</span><span class="pun">:</span><span class="pln"> </span><span class="pun">{</span><span class="pln"><br>&nbsp; hostname</span><span class="pun">:</span><span class="pln"> </span><span class="str">"fake-intermediary.altostrat.com"</span><span class="pln"><br></span><span class="pun">}</span><span class="pln"><br>security_result</span><span class="pun">:</span><span class="pln"> </span><span class="pun">{</span><span class="pln"><br>&nbsp; rule_name</span><span class="pun">:</span><span class="pln"> </span><span class="str">"EventID: 6789"</span><span class="pln"><br>&nbsp; summary</span><span class="pun">:</span><span class="pln"> </span><span class="str">"A scheduled task was created."</span><span class="pln"><br>&nbsp; severity</span><span class="pun">:</span><span class="pln"> INFORMATIONAL<br></span><span class="pun">}</span><span class="pln"><br></span></code></pre></devsite-code>
+<p>As shown in this example, the event has been divided into the following UDM
+categories:</p>
+
+<ul>
+<li>metadata: Background information about the event.</li>
+<li>principal: Device which scheduled the suspicious task.</li>
+<li>target: Software targeted by the suspicious task.</li>
+<li>intermediary: Intermediary involved with the suspicious task.</li>
+<li>security_result: Security details about the suspicious task.</li>
+</ul>
+
+<h3 id="setting_" data-text="SETTING_UNCATEGORIZED, SETTING_CREATION, SETTING_MODIFICATION, SETTING_DELETION" tabindex="-1">SETTING_<wbr>UNCATEGORIZED,<wbr> SETTING_<wbr>CREATION,<wbr> SETTING_<wbr>MODIFICATION,<wbr> SETTING_<wbr>DELETION</h3>
+
+<p>Required fields:</p>
+
+<ul>
+<li><strong>principal</strong>: Must be present, non-empty, and include a machine identifier.</li>
+<li><strong>target</strong>: Must be present, non-empty, and include a resource with its type specified as <strong>SETTING</strong></li>
+</ul>
+
+<h5 id="udm_example_for_event_type_setting_modification" data-text="UDM Example for Event Type SETTING_MODIFICATION" tabindex="-1">UDM Example for Event Type SETTING_<wbr>MODIFICATION</h5>
+
+<p>The following example illustrates how an event of type SETTING_MODIFICATION would be formatted for the Chronicle UDM:</p>
+<devsite-code data-copy-event-label=""><pre class="" translate="no" dir="ltr" is-upgraded=""><code translate="no" dir="ltr">metadata {
+  event_timestamp: "2020-01-01T13:27:41+00:00"
+  event_type: SETTING_MODIFICATION
+  vendor_name: "Microsoft"
+  product_name: "Windows"
+}
+principal {
+  hostname: "test.win.com"
+}
+target {
+  resource {
+    type: "SETTING"
+    name: "test-setting"
+  }
+}
+</code></pre></devsite-code>
+<p>As shown in this example, the event has been divided into the following UDM categories:</p>
+
+<ul>
+<li>metadata: Background information about the event.</li>
+<li>principal: Information about the device on which the setting modification occurred.</li>
+<li>target: Resource details.</li>
+</ul>
+
+<h3 id="status_" data-text="SERVICE_UNSPECIFIED, SERVICE_CREATION, SERVICE_DELETION, SERVICE_START, SERVICE_STOP" tabindex="-1">SERVICE_<wbr>UNSPECIFIED,<wbr> SERVICE_<wbr>CREATION,<wbr> SERVICE_<wbr>DELETION,<wbr> SERVICE_<wbr>START,<wbr> SERVICE_<wbr>STOP</h3>
+
+<p>Required fields:</p>
+
+<ul>
+<li><strong>target</strong>: Include the user identifier and specify either process or application.</li>
+<li><strong>principal</strong>: Include at least one machine identifier (IP or MAC ADDRESS, hostname,
+or asset identifier).</li>
+</ul>
+
+<h5 id="udm_example_for_service_unspecified" data-text="UDM Example for SERVICE_UNSPECIFIED" tabindex="-1">UDM Example for SERVICE_<wbr>UNSPECIFIED</h5>
+
+<p>The following example illustrates how an event of type SERVICE_UNSPECIFIED would
+be formatted for the Chronicle UDM:</p>
+<devsite-code data-copy-event-label=""><pre class="" translate="no" dir="ltr" is-upgraded=""><code translate="no" dir="ltr">metadata: {
+ event_timestamp: {
+   seconds: 1595656745
+   nanos: 832000000
+    }
+ event_type: SERVICE_UNSPECIFIED
+   vendor_name: "Preempt"
+   product_name: "PREEMPT_AUTH"
+   product_event_type: "SERVICE_ACCESS"
+   description: "Remote Procedures (RPC)"
+   }
+ principal: {
+   hostname: "XXX-YYY-ZZZ"
+   ip: "10.10.10.10"
+   }
+ target: {
+   hostname: "TestHost"
+   user: {
+      userid: "ORG\\User"
+      user_display_name: "user name"
+   }
+ application: "application.name"
+   resource: {
+      type: "Service Type"
+      name: "RPC"
+   }
+ }
+</code></pre></devsite-code>
+<p>As shown in this example, the event has been divided into the following UDM
+categories:</p>
+
+<ul>
+<li>metadata: Background information about the event.</li>
+<li>principal: Device and location details.</li>
+<li>target: Hostname and user identifier.</li>
+<li>application: Application name and resource type.</li>
+</ul>
+
+<h3 id="status_" data-text="STATUS_HEARTBEAT, STATUS_STARTUP, STATUS_SHUTDOWN, STATUS_UPDATE" tabindex="-1">STATUS_<wbr>HEARTBEAT,<wbr> STATUS_<wbr>STARTUP,<wbr> STATUS_<wbr>SHUTDOWN,<wbr> STATUS_<wbr>UPDATE</h3>
+
+<p>Required fields:</p>
+
+<ul>
+<li><strong>metadata</strong>: Include the required fields.</li>
+<li><strong>principal</strong>: At least one machine identifier (IP or MAC ADDRESS, hostname,
+or asset identifier).</li>
+</ul>
+
+<h5 id="udm_example_for_status_heartbeat" data-text="UDM Example for STATUS_HEARTBEAT" tabindex="-1">UDM Example for STATUS_<wbr>HEARTBEAT</h5>
+
+<p>The following example illustrates how an event of type STATUS_HEARTBEAT would
+be formatted for the Chronicle UDM:</p>
+<devsite-code data-copy-event-label=""><pre class="" translate="no" dir="ltr" is-upgraded=""><code translate="no" dir="ltr">metadata: {
+  event_timestamp: {
+    seconds: 1588180305
+  }
+  event_type: STATUS_HEARTBEAT
+  vendor_name: "DMP"
+  product_name: "ENTRE"
+}
+principal: {
+  hostname: "testHost"
+  location: {
+    name: "Building 1"
+  }
+}
+intermediary: {
+  ip: "8.8.8.8"
+}
+security_result: {
+  summary: "Event - Locked"
+  description: "description"
+  severity: LOW
+  severity_details: "INFO"
+}
+</code></pre></devsite-code>
+<p>As shown in this example, the event has been divided into the following UDM
+categories:</p>
+
+<ul>
+<li>metadata: Background information about the event.</li>
+<li>principal: Device and location details.</li>
+<li>intermediary: Device IP address.</li>
+<li>security_result: Security result details.</li>
+</ul>
+
+<h3 id="system_" data-text="SYSTEM_AUDIT_LOG_UNCATEGORIZED, SYSTEM_AUDIT_LOG_WIPE" tabindex="-1">SYSTEM_<wbr>AUDIT_<wbr>LOG_<wbr>UNCATEGORIZED,<wbr> SYSTEM_<wbr>AUDIT_<wbr>LOG_<wbr>WIPE</h3>
+
+<p>Required fields:</p>
+
+<ul>
+<li><strong>principal</strong>: Include a user identifier for the user who performed the
+operation on the log and a machine identifier for the machine where the log
+is or was (in the case of wiping) stored.</li>
+</ul>
+
+<h5 id="udm_example_for_system_audit_log_wipe" data-text="UDM Example for SYSTEM_AUDIT_LOG_WIPE" tabindex="-1">UDM Example for SYSTEM_<wbr>AUDIT_<wbr>LOG_<wbr>WIPE</h5>
+
+<p>The following example illustrates how an event of type SYSTEM_AUDIT_LOG_WIPE
+would be formatted for the Chronicle UDM:</p>
+<devsite-code data-copy-event-label=""><pre class="" translate="no" dir="ltr" is-upgraded=""><code translate="no" dir="ltr"><span class="pln">metadata </span><span class="pun">{</span><span class="pln"><br>&nbsp; event_timestamp</span><span class="pun">:</span><span class="pln"> </span><span class="str">"2020-01-01T13:27:41+00:00"</span><span class="pln"><br>&nbsp; event_type</span><span class="pun">:</span><span class="pln"> SYSTEM_AUDIT_LOG_WIPE<br>&nbsp; vendor_name</span><span class="pun">:</span><span class="pln"> </span><span class="str">"Microsoft"</span><span class="pln"><br>&nbsp; product_name</span><span class="pun">:</span><span class="pln"> </span><span class="str">"Windows"</span><span class="pln"><br></span><span class="pun">}</span><span class="pln"><br>principal </span><span class="pun">{</span><span class="pln"><br>&nbsp; hostname</span><span class="pun">:</span><span class="pln"> </span><span class="str">"altostrat.com"</span><span class="pln"><br>&nbsp; user </span><span class="pun">{</span><span class="pln"><br>&nbsp; &nbsp; userid</span><span class="pun">:</span><span class="pln"> </span><span class="str">"test"</span><span class="pln"><br>&nbsp; &nbsp; windows_sid</span><span class="pun">:</span><span class="pln"> </span><span class="str">"ABCDEFGH-123456789-1111111-1000"</span><span class="pln"><br>&nbsp; </span><span class="pun">}</span><span class="pln"><br></span><span class="pun">}</span><span class="pln"><br></span></code></pre></devsite-code>
+<p>As shown in this example, the event has been divided into the following UDM
+categories:</p>
+
+<ul>
+<li>metadata: Background information about the event.</li>
+<li>principal: Device and user details.</li>
+</ul>
+
+<h3 id="user_change" data-text="USER_CHANGE_PASSWORD, USER_CHANGE_PERMISSIONS" tabindex="-1">USER_<wbr>CHANGE_<wbr>PASSWORD,<wbr> USER_<wbr>CHANGE_<wbr>PERMISSIONS</h3>
+
+<p>Required fields:</p>
+
+<ul>
+<li><strong>metadata</strong>: Include the required fields.</li>
+<li><strong>principal</strong>: If the user account is modified from a remote location,
+populate principal with information about the machine from where the user
+modification originated.</li>
+<li><strong>target</strong>: Populate target.user with information about the user that has been modified.</li>
+<li><strong>intermediary</strong>: For SSO logins, intermediary must include at least one machine
+identifier for the SSO server if available.</li>
+</ul>
+
+<h3 id="user_communication" data-text="USER_COMMUNICATION" tabindex="-1">USER_<wbr>COMMUNICATION</h3>
+
+<p>Required fields:</p>
+
+<ul>
+<li><strong>principal:</strong> Populate the <strong>principal.user</strong> field with details associated
+with user-initiated (sender) communication, such as a chat message in Google
+Chat or Slack, a video or voice conference in Zoom or Google Meet, or a VoIP
+connection.</li>
+</ul>
+
+<p>Optional fields:</p>
+
+<ul>
+<li><strong>target:</strong> (Recommended) Populate the <strong>target.user</strong> field with
+information about the target user (receiver) of the cloud communication
+resource. Populate the <strong>target.application</strong> field with information about 
+the target cloud communication application.</li>
+</ul>
+
+<h3 id="user_" data-text="USER_CREATION, USER_DELETION" tabindex="-1">USER_<wbr>CREATION,<wbr> USER_<wbr>DELETION</h3>
+
+<p>Required fields:</p>
+
+<ul>
+<li><strong>metadata:</strong> event_timestamp</li>
+<li><strong>principal:</strong> Include information about the machine where the request to
+create or delete the user originated from. For a local user creation or
+deletion, <strong>principal</strong> must include at least one machine identifier for the
+originating machine.</li>
+<li><strong>target:</strong> Location where the user is being created. Must also include user
+information (for example, <strong>target.user</strong>).</li>
+</ul>
+
+<p>Optional fields:</p>
+
+<ul>
+<li><strong>principal:</strong> User and process details for the machine where the user
+creation or deletion request was initiated.</li>
+<li><strong>target:</strong> Information about the target machine (if different than the
+principal machine).</li>
+</ul>
+
+<h3 id="user_login" data-text="USER_LOGIN, USER_LOGOUT" tabindex="-1">USER_<wbr>LOGIN,<wbr> USER_<wbr>LOGOUT</h3>
+
+<p>Required fields:</p>
+
+<ul>
+<li><strong>metadata</strong>: Include the required fields.</li>
+<li><strong>principal</strong>: For remote user activity (for example, remote login),
+populate principal with information about the machine originating the user
+activity. For local user activity (for example, local login), do not set
+principal.</li>
+<li><strong>target</strong>: Populate target.user with information about the user that has
+logged on or logged off. If principal is not set (for example, local login),
+target must also include at least one machine identifier identifying the target
+machine. For machine to machine user activity (for example, remote login, SSO,
+Cloud Service, VPN), target must include information on either the target
+application, target machine, or target VPN server.</li>
+<li><strong>intermediary</strong>: For SSO logins, intermediary must include at least one machine
+identifier for the SSO server if available.</li>
+<li><strong>network</strong> and <strong>network.http</strong>: If the login occurs over HTTP, you must place all
+available details in network.ip_protocol, network.application_protocol,
+and network.http.</li>
+<li><strong>authentication</strong> extension: Must identify the type of authentication system
+that the event is related to (for example, machine, SSO, or VPN) and the
+mechanism employed (username and password, OTP, etc.).</li>
+<li><strong>security_result</strong>: Add a security_result field to represent the login status
+if it fails. Specify security_result.category with the AUTH_VIOLATION
+value if authentication fails.</li>
+</ul>
+
+<h3 id="user_resource_access" data-text="USER_RESOURCE_ACCESS" tabindex="-1">USER_<wbr>RESOURCE_<wbr>ACCESS</h3>
+
+<p>Required fields:</p>
+
+<ul>
+<li><strong>principal:</strong> Populate the <strong>principal.user</strong> field with details about
+attempts to access a cloud resource (for example, a Salesforce case,
+Office365 calendar, Google Doc, or ServiceNow ticket).</li>
+<li><strong>target:</strong> Populate the <strong>target.resource</strong> field with information about
+the target cloud resource.</li>
+</ul>
+
+<p>Optional fields:</p>
+
+<ul>
+<li><strong>target.application:</strong> (Recommended) Populate the <strong>target.application</strong> field with
+information about the target cloud application.</li>
+</ul>
+
+<h3 id="resource_" data-text="USER_RESOURCE_CREATION, USER_RESOURCE_DELETION" tabindex="-1">USER_<wbr>RESOURCE_<wbr>CREATION,<wbr> USER_<wbr>RESOURCE_<wbr>DELETION</h3>
+
+<p>Required fields:</p>
+
+<ul>
+<li><strong>principal:</strong> Populate the <strong>principal.user</strong> field with details associated
+with the user created within a cloud resource (for example, a Salesforce
+case, Office365 calendar, Google Doc, or ServiceNow ticket).</li>
+<li><strong>target:</strong> Populate the <strong>target.resource</strong> field with information about
+the target cloud resource.</li>
+</ul>
+
+<p>Optional fields:</p>
+
+<ul>
+<li><strong>target.application:</strong> (Recommended) Populate the <strong>target.application</strong> field with
+information about the target cloud application.</li>
+</ul>
+
+<h3 id="user_r_update_content" data-text="USER_RESOURCE_UPDATE_CONTENT" tabindex="-1">USER_<wbr>RESOURCE_<wbr>UPDATE_<wbr>CONTENT</h3>
+
+<p>Required fields:</p>
+
+<ul>
+<li><strong>principal:</strong> Populate the <strong>principal.user</strong> field with details associated
+with the user whose content was updated within a cloud resource (for
+example, a Salesforce case, Office365 calendar, Google Doc, or ServiceNow
+ticket).</li>
+<li><strong>target:</strong> Populate the <strong>target.resource</strong> field with information about
+the target cloud resource.</li>
+</ul>
+
+<p>Optional fields:</p>
+
+<ul>
+<li><strong>target.application:</strong> (Recommended) Populate the <strong>target.application</strong> field with
+information about the target cloud application.</li>
+</ul>
+
+<h3 id="user_r_update_permissions" data-text="USER_RESOURCE_UPDATE_PERMISSIONS" tabindex="-1">USER_<wbr>RESOURCE_<wbr>UPDATE_<wbr>PERMISSIONS</h3>
+
+<p>Required fields:</p>
+
+<ul>
+<li><strong>principal:</strong> Populate the <strong>principal.user</strong> field with details associated
+with the user whose permissions were updated within a cloud resource (for
+example, a Salesforce case, Office365 calendar, Google Doc, or ServiceNow
+ticket).</li>
+<li><strong>target:</strong> Populate the <strong>target.resource</strong> field with information about
+the target cloud resource.</li>
+</ul>
+
+<p>Optional fields:</p>
+
+<ul>
+<li><strong>target.application:</strong> (Recommended) Populate the <strong>target.application</strong> field with
+information about the target cloud application.</li>
+</ul>
+
+<h3 id="user_uncategorized" data-text="USER_UNCATEGORIZED" tabindex="-1">USER_<wbr>UNCATEGORIZED</h3>
+
+<p>Required fields:</p>
+
+<ul>
+<li><strong>metadata:</strong> event_timestamp</li>
+<li><strong>principal:</strong> Include information about the machine where the request to
+create or delete the user originated from. For a local user creation or
+deletion, <strong>principal</strong> must include at least one machine identifier for the
+originating machine.</li>
+<li><strong>target:</strong> Location where the user is being created. Must also include user
+information (for example, <strong>target.user</strong>).</li>
+</ul>
+
+<p>Optional fields:</p>
+
+<ul>
+<li><strong>principal:</strong> User and process details for the machine where the user
+creation or deletion request was initiated.</li>
+<li><strong>target:</strong> Information about the target machine (if different than the
+principal machine).</li>
+</ul>
