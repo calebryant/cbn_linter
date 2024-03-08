@@ -17,7 +17,25 @@ from pyparsing import (
 )
 
 class Parser:
+    """
+    The Parser class is responsible for parsing CBN configuration files and generating an Abstract Syntax Tree (AST).
+
+    Attributes:
+        ast (AST.AST): The Abstract Syntax Tree object to store the parsed values.
+
+    Methods:
+        hash_parse_action: Converts a parsed hash into a Python dictionary object.
+        function_config_parse_action: Converts a parsed function config into a custom FunctionConfig object.
+        function_parse_action: Converts a parsed function into a custom Function object.
+        conditional_parse_action: Converts a parsed conditional block into a custom Conditional object.
+        loop_parse_action: Converts a parsed loop block into a custom Loop object.
+        parse_file: Parses a CBN configuration file and returns the list of parsed tokens.
+        parse_string: Parses a CBN configuration string and returns the list of parsed tokens.
+    """
     def __init__(self):
+        """
+        Initializes an instance of the Parser class.
+        """
         self.ast = AST.AST() # define the AST to put values in
         #######################################################
         # Define the grammar for CBN configuration files #
@@ -159,16 +177,32 @@ class Parser:
         self.grammars.ignore(comment_token) # may not want to ignore comments if we want to be able to re-write the parser after taking it in
         # self.grammars.set_debug() # only used for debugging parsing issues
 
-    # helper function that turns parsed hash into a python dict object
     def hash_parse_action(self, key_values: list) -> dict:
+        """
+        Converts a parsed hash into a Python dictionary object.
+
+        Args:
+            key_values (list): The parsed key-value pairs of the hash.
+
+        Returns:
+            dict: The converted dictionary object.
+        """
         to_return = {}
         for kv in key_values.as_list():
             key, value = kv
             to_return[key] = value
         return to_return
 
-    # helper function that turns a parsed function config into a custom FunctionConfig object
     def function_config_parse_action(self, key_value: tuple) -> tuple:
+        """
+        Converts a parsed function config into a custom FunctionConfig object.
+
+        Args:
+            key_value (tuple): The parsed key-value pair of the function config.
+
+        Returns:
+            tuple: The converted FunctionConfig object.
+        """
         name, value = key_value
         if isinstance(value, dict):
             if name == "replace":
@@ -184,8 +218,16 @@ class Parser:
         else:
             return (name, Plugins.Lit(name, value))
             
-    # helper function that turns a parsed function into a custom Function object
     def function_parse_action(self, tokens: list) -> Plugins.Filter:
+        """
+        Converts a parsed function into a custom Function object.
+
+        Args:
+            tokens (list): The parsed tokens representing the function.
+
+        Returns:
+            Plugins.Filter: The converted Function object.
+        """
         name = tokens[0]
         config_options = {}
         for option in tokens[1:]:
@@ -205,8 +247,16 @@ class Parser:
             self.ast.add_function(func)
         return func
 
-    # helper function that turns a parsed conditional block into a custom Conditional object
     def conditional_parse_action(self, tokens: list) -> Plugins.Conditional:
+        """
+        Converts a parsed conditional block into a custom Conditional object.
+
+        Args:
+            tokens (list): The parsed tokens representing the conditional block.
+
+        Returns:
+            Plugins.Conditional: The converted Conditional object.
+        """
         if tokens[0] == "else":
             cond = Plugins.Conditional(tokens[0], contents=tokens[1])
         else:
@@ -214,15 +264,40 @@ class Parser:
         self.ast.add_conditional(cond)
         return cond
     
-    # helper function that turns a parsed loop block into a custom Loop object
     def loop_parse_action(self, tokens: list) -> Plugins.Loop:
+        """
+        Converts a parsed loop block into a custom Loop object.
+
+        Args:
+            tokens (list): The parsed tokens representing the loop block.
+
+        Returns:
+            Plugins.Loop: The converted Loop object.
+        """
         loop = Plugins.Loop(tokens[1], tokens[2])
         self.ast.add_loop(loop)
         return loop
 
     def parse_file(self, file_name: str) -> list:
+        """
+        Parses a file using the defined grammars.
+
+        Args:
+            file_name (str): The name of the file to parse.
+
+        Returns:
+            list: The parsed result as a list.
+        """
         return self.grammars.parse_file(file_name).as_list()
 
     def parse_string(self, string: str) -> list:
+        """
+        Parses a string using the defined grammars.
+
+        Args:
+            string (str): The string to parse.
+
+        Returns:
+            list: The parsed result as a list.
+        """
         return self.grammars.parse_string(string).as_list()
-        
