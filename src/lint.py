@@ -31,8 +31,7 @@ def lint_cbn():
             open_file = open(config_file)
             file_string = open_file.read()
             tokens = parser.parse_string(file_string)
-            f = open("get_state.conf",'w')
-            f.write("filter {{ {} {} statedump {{ }} drop {{ }} }}".format(str(parser.ast.build_replace_initialize()), str(parser.ast)))
+            pass
             # ast = AST(tokens)
             # the_state = ast.state
         except exceptions.ParseSyntaxException as oopsie:

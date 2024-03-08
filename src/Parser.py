@@ -1,13 +1,13 @@
 # Created 2023/07/12
 # Author: Caleb Bryant
-# Title: Grammar.py
+# Title: Parser.py
 # Description: This file defines a Grammar class that contains the grammar definitions of a Chronicle parser config file.
 # References:
     # https://pyparsing-docs.readthedocs.io/en/latest/HowToUsePyparsing.html, 
     # https://www.geeksforgeeks.org/introduction-to-grammar-in-theory-of-computation/
 
 
-from AST import *
+import AST, Plugins
 from pyparsing import (
     Word, nums, Combine, Optional,
     QuotedString, ZeroOrMore, Group,
@@ -18,7 +18,7 @@ from pyparsing import (
 
 class Parser:
     def __init__(self):
-        self.ast = AST() # define the AST to put values in
+        self.ast = AST.AST() # define the AST to put values in
         #######################################################
         # Define the grammar for CBN configuration files #
         #######################################################
@@ -160,7 +160,7 @@ class Parser:
         # self.grammars.set_debug() # only used for debugging parsing issues
 
     # helper function that turns parsed hash into a python dict object
-    def hash_parse_action(self, key_values):
+    def hash_parse_action(self, key_values: list) -> dict:
         to_return = {}
         for kv in key_values.as_list():
             key, value = kv
@@ -168,61 +168,61 @@ class Parser:
         return to_return
 
     # helper function that turns a parsed function config into a custom FunctionConfig object
-    def function_config_parse_action(self, key_value):
+    def function_config_parse_action(self, key_value: tuple) -> tuple:
         name, value = key_value
         if isinstance(value, dict):
             if name == "replace":
-                return (name, Replace(value))
+                return (name, Plugins.Replace(value))
             elif name == "merge":
-                return (name, Merge(value))
+                return (name, Plugins.Merge(value))
             elif name == "rename":
-                return (name, Rename(value))
+                return (name, Plugins.Rename(value))
             else:
-                return (name, FunctionOption(name, value))
+                return (name, Plugins.Hash(name, value))
         elif isinstance(value, list):
-            return (name, List(name, value))
+            return (name, Plugins.List(name, value))
         else:
-            return (name, Lit(name, value))
+            return (name, Plugins.Lit(name, value))
             
     # helper function that turns a parsed function into a custom Function object
-    def function_parse_action(self, tokens):
+    def function_parse_action(self, tokens: list) -> Plugins.Filter:
         name = tokens[0]
         config_options = {}
         for option in tokens[1:]:
             key, value = option
             config_options[key] = value
         if name == "mutate":
-            func = Mutate(name, config_options)
+            func = Plugins.Mutate(name, config_options)
             self.ast.add_mutate(func)
         elif name == "grok":
-            func = Grok(name, config_options)
+            func = Plugins.Grok(name, config_options)
             self.ast.add_grok(func)
         elif name == "date":
-            func = Date(name, config_options)
+            func = Plugins.Date(name, config_options)
             self.ast.add_date(func)
         else:
-            func = Function(name, config_options)
+            func = Plugins.Filter(name, config_options)
             self.ast.add_function(func)
         return func
 
     # helper function that turns a parsed conditional block into a custom Conditional object
-    def conditional_parse_action(self, tokens):
+    def conditional_parse_action(self, tokens: list) -> Plugins.Conditional:
         if tokens[0] == "else":
-            cond = Conditional(tokens[0], contents=tokens[1])
+            cond = Plugins.Conditional(tokens[0], contents=tokens[1])
         else:
-            cond = Conditional(tokens[0], statement=tokens[1], contents=tokens[2])
+            cond = Plugins.Conditional(tokens[0], statement=tokens[1], contents=tokens[2])
         self.ast.add_conditional(cond)
         return cond
     
     # helper function that turns a parsed loop block into a custom Loop object
-    def loop_parse_action(self, tokens):
-        loop = Loop(tokens[1], tokens[2])
+    def loop_parse_action(self, tokens: list) -> Plugins.Loop:
+        loop = Plugins.Loop(tokens[1], tokens[2])
         self.ast.add_loop(loop)
         return loop
 
-    def parse_file(self, file_name):
+    def parse_file(self, file_name: str) -> list:
         return self.grammars.parse_file(file_name).as_list()
 
-    def parse_string(self, string):
+    def parse_string(self, string: str) -> list:
         return self.grammars.parse_string(string).as_list()
         
